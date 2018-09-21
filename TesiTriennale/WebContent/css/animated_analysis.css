@@ -1,0 +1,12 @@
+@CHARSET "ISO-8859-1";
+
+#animated-chart
+{
+	flex-grow: 2;
+	height: 45em !important;
+}
+
+#content .panel > a:first-of-type
+{
+	margin: 0;
+}
