@@ -10,3 +10,92 @@
 {
 	margin: 0;
 }
+
+#chart-container
+{
+	flex-grow: 2;
+}
+
+#options-bar
+{
+	display: flex;
+	align-items: center;
+	background-color: #4CAF50;
+	padding: 1em;
+}
+
+/* CHART BUTTON */
+.play-button
+{
+	border: 0;
+	background: transparent;
+	box-sizing: border-box;
+	width: 0;
+	/*height: 5em;*/
+	height: 3em;
+	border-color: transparent transparent transparent #202020;
+	border-color: transparent transparent transparent #4CAF50;
+	border-color: transparent transparent transparent #333;
+	background-color: #4CAF50;
+	transition: 100ms all ease;
+	cursor: pointer;
+	border-style: solid;
+	/*border-width: 2.5em 0 2.5em 4.5em;*/
+	border-width: 1.5em 0 1.5em 3em;
+}
+.play-button.paused
+{
+	border-style: double;
+	/*border-width: 0 0 0 4.5em;*/
+	border-width: 0 0 0 3em;
+}
+.play-button:hover
+{
+	border-color: transparent transparent transparent #404040;
+	border-color: transparent transparent transparent #4CAF50;
+	border-color: transparent transparent transparent #333;
+}
+
+/* SLIDER */
+.slide-container
+{
+    /*width: 100%;*/
+    flex-grow: 2;
+}
+
+
+.slider
+{
+    -webkit-appearance: none;
+    width: 100%;
+    height: 1em;
+    border-radius: 0.5em;
+    color: #333;  
+    /*background: #d3d3d3;*/
+    outline: none;
+    /*opacity: 0.7;
+    -webkit-transition: .2s;
+    transition: opacity .2s;*/
+}
+
+.slider::-webkit-slider-thumb
+{
+    -webkit-appearance: none;
+    appearance: none;
+    width: 1.2em;
+    height: 1.2em;
+    border-radius: 50%; 
+    /*background: #4CAF50;*/
+    background: #333;
+    cursor: pointer;
+}
+
+.slider::-moz-range-thumb
+{
+    width: 1.2em;
+    height: 1.2em;
+    border-radius: 50%;
+    /*background: #4CAF50;*/
+    background: #333;
+    cursor: pointer;
+}

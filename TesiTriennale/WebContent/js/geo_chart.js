@@ -255,8 +255,9 @@ function showCountryInfo()
 {
 	if (xhttp.readyState == 4 && xhttp.status == 200)
 	{
-		document.body.style.cursor = "auto";
-		document.getElementById('geo-chart').style.cursor = "auto";
+//		document.body.style.cursor = "auto";
+//		document.getElementById('geo-chart').style.cursor = "auto";
+		document.getElementById('toast').className = '';
 		
 		var infoJSON = xhttp.responseText;
 		var info = JSON.parse(infoJSON);
@@ -815,8 +816,10 @@ function regionClickHandler(e)
 	$('#country-news > p').empty();
 	currentCountry = e.region;
 	
-	document.body.style.cursor = "wait";
-	document.getElementById('geo-chart').style.cursor = "wait";
+//	document.body.style.cursor = "wait";
+//	document.getElementById('geo-chart').style.cursor = "wait";
+	document.getElementById('toast').innerHTML = '<i class="fa fa-circle-notch fa-spin"></i> Loading ' + e.region + ' info';
+	document.getElementById('toast').className = 'show';
 	
 	xhttp = new XMLHttpRequest();
 	xhttp.open("get", "load_country_info?country=" + e.region, true);

@@ -98,7 +98,7 @@ function showCheckboxs()
 
 function loadCheckboxs()
 {
-	document.body.style.cursor = "wait";
+//	document.body.style.cursor = "wait";
 	
 	xhttpCheckBoxs = new XMLHttpRequest();
 	xhttpCheckBoxs.open("get", "load_countries", true);
@@ -181,7 +181,31 @@ function AnimatedBubbleChart()
 	
 	this.hasNextYear = function()
 	{
-		return this.index < this.years.length;
+		return (this.index < (this.years.length - 1));
+	}
+	
+	this.getNextStep = function()
+	{
+		if (this.index == 0)
+		{
+			return 0;
+		}
+		else
+		{
+			return this.years[this.index] - this.years[this.index - 1];
+		}
+	}
+	
+	this.getYearIndex = function(year)
+	{
+		for (var i = 0; i < this.years.length; i++)
+		{
+			if (this.years[i] == year)
+			{
+				return i;
+			}
+		}
+		return -1;
 	}
 //	this.data = null;
 //	this.setData = function(arrayData) {
@@ -207,15 +231,25 @@ function drawAnimatedChart()
 //	console.log("Array: " + animatedChart.arrayYearsData);
 	animatedChart.setCurrentTitle();
 	
+//	console.log(animatedChart.getNextStep());
+	if (document.getElementById('yearsRange').value != animatedChart.getCurrentYear())
+	{
+		document.getElementById('yearsRange').stepUp(animatedChart.getNextStep());
+	}
+//	console.log(document.getElementById('yearsRange').value);
+	
 	var data = google.visualization.arrayToDataTable(animatedChart.arrayYearsData[animatedChart.index]);
 	
 	var chart = new google.visualization.BubbleChart(document.getElementById('animated-chart'));
 	
-	animatedChart.increaseIndex();
-	
-	if (animatedChart.hasNextYear())
+	if (animatedChart.hasNextYear() && document.getElementById('playButton').classList.contains("paused"))
 	{
+		animatedChart.increaseIndex();
 		setTimeout(drawAnimatedChart, 1000);
+	}
+	else if (!animatedChart.hasNextYear())
+	{
+		document.getElementById('playButton').classList.remove("paused");
 	}
 	
 	chart.draw(data, animatedChart.options);
@@ -233,11 +267,26 @@ function getAxisTicks(min, max, range)
 	return ticks;
 }
 
+//function getAxisTicks(min, max)
+//{
+//	var ticks = []
+//	ticks.push(0);
+//	ticks.push(min);
+//	min *= 2;
+//	while (min < max)
+//	{
+//		ticks.push(min);
+//		min *= 2;
+//	}
+//	ticks.push(min);
+//	return ticks;
+//}
+
 function showAnimatedChart()
 {
 	if (xhttpChart.readyState == 4 && xhttpChart.status == 200)
 	{
-		document.body.style.cursor = "auto";
+//		document.body.style.cursor = "auto";
 		
 		var resultSTR = xhttpChart.responseText;
 		var resultJSON = JSON.parse(resultSTR);
@@ -257,6 +306,8 @@ function showAnimatedChart()
 		
 		animatedChart.options.hAxis.ticks = getAxisTicks(140, boundaries.gdppercapita.max, 20000);
 		animatedChart.options.vAxis.ticks = getAxisTicks(0, boundaries.poverty.max, 15);
+//		animatedChart.options.hAxis.ticks = getAxisTicks(500, boundaries.gdppercapita.max);
+//		animatedChart.options.vAxis.ticks = getAxisTicks(10, boundaries.poverty.max);
 		
 		for (var i = firstYear; i <= lastYear; i++)
 		{
@@ -273,6 +324,15 @@ function showAnimatedChart()
 			}
 		}
 		
+		$('#yearsRange').attr('min', animatedChart.years[0]);
+		$('#yearsRange').attr('max', animatedChart.years[animatedChart.years.length - 1]);
+		$('#yearsRange').attr('value', animatedChart.getCurrentYear());
+		
+		document.getElementById('playButton').disabled = false;
+		document.getElementById('yearsRange').disabled = false;
+		
+		document.getElementById('toast').className = '';
+		
 		console.log(arrayData.data);
 //		animatedChart.setData(arrayData.data);
 		
@@ -282,7 +342,11 @@ function showAnimatedChart()
 
 function loadAnimatedChart()
 {
-	document.body.style.cursor = "wait";
+//	document.body.style.cursor = "wait";
+	document.getElementById('toast').innerHTML = '<i class="fa fa-circle-notch fa-spin"></i> Loading Animated Chart';
+	document.getElementById('toast').className = 'show';
+	document.getElementById('playButton').disabled = true;
+	document.getElementById('yearsRange').disabled = true;
 	
 	google.charts.load('current', {'packages':['corechart']});
 	

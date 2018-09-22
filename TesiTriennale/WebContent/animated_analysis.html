@@ -12,6 +12,7 @@
 	<script src="js/update.js"></script>
 	<script src="js/accordion.js"></script>
 	<script src="js/animated_analysis.js"></script>
+	<script src="js/animated_chart_bar.js"></script>
 	<title>Animated Analysis</title>
 </head>
 <body onload="loadCheckboxs(); loadAnimatedChart();">
@@ -47,9 +48,15 @@
 	
 	<div id="content">
 	
-		<div id="animated-chart"></div>
-		
-		<button></button>
+		<div id="chart-container">
+			<div id="animated-chart"></div>
+			<div id="options-bar">
+				<button id="playButton" class="play-button"></button>
+				<div class="slide-container">
+  					<input type="range" step="1" class="slider" id="yearsRange" onchange="showSelectedYear(this)">
+				</div>
+			</div>
+		</div>
 	
 		<div id="checkbox-container">
 			<div id="chart-options-panel" class="panel">
@@ -107,5 +114,7 @@
 			<div id="regions-selector-btn" class="accordion" onclick="openRegionsSelectorPanel()">Regions Selector <i class="fas fa-angle-up"></i></div>	
 		</div>
 	</div>
+	
+	<div id="toast"></div>
 </body>
 </html>
