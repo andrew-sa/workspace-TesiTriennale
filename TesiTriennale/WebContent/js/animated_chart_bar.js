@@ -22,3 +22,27 @@ function showSelectedYear(rangeElement)
 		drawAnimatedChart();
 	}
 }
+
+function showYear(labelElement)
+{
+	var year = labelElement.innerText;
+	var currentYear = animatedChart.getCurrentYear();
+	if (year > currentYear)
+	{
+		console.log(year - currentYear);
+		document.getElementById('yearsRange').stepUp(year - currentYear);
+		animatedChart.index = animatedChart.getYearIndex(year);
+		drawAnimatedChart();
+	}
+	else if (year < currentYear)
+	{
+		console.log(currentYear - year);
+		document.getElementById('yearsRange').stepDown(currentYear - year);
+		animatedChart.index = animatedChart.getYearIndex(year);
+		drawAnimatedChart();
+	}
+	else //if year == currentYear
+	{
+		// do nothing
+	}
+}

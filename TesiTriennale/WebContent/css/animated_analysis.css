@@ -76,6 +76,7 @@
     /*opacity: 0.7;
     -webkit-transition: .2s;
     transition: opacity .2s;*/
+    margin: 0;
 }
 
 .slider::-webkit-slider-thumb
@@ -98,4 +99,24 @@
     /*background: #4CAF50;*/
     background: #333;
     cursor: pointer;
+}
+
+#yearsLabel
+{
+	width: 100%;
+	display: flex;
+	justify-content: space-between;
+	font-size: 0.9em;
+	color: #333;
+}
+
+#yearsLabel > span
+{
+	cursor: pointer;
+}
+
+/* COUNTRY SELECTOR */
+#countries-selector-panel > .header-panel
+{
+	cursor: auto;
 }

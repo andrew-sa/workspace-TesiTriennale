@@ -328,6 +328,11 @@ function showAnimatedChart()
 		$('#yearsRange').attr('max', animatedChart.years[animatedChart.years.length - 1]);
 		$('#yearsRange').attr('value', animatedChart.getCurrentYear());
 		
+		for (var i = animatedChart.years[0]; i <= animatedChart.years[animatedChart.years.length - 1]; i++)
+		{
+			$('#yearsLabel').append('<span onclick="showYear(this)">' + i + '</span>');
+		}
+		
 		document.getElementById('playButton').disabled = false;
 		document.getElementById('yearsRange').disabled = false;
 		

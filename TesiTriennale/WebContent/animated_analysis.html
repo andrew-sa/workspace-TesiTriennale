@@ -54,20 +54,21 @@
 				<button id="playButton" class="play-button"></button>
 				<div class="slide-container">
   					<input type="range" step="1" class="slider" id="yearsRange" onchange="showSelectedYear(this)">
+  					<div id="yearsLabel"></div>
 				</div>
 			</div>
 		</div>
 	
 		<div id="checkbox-container">
-			<div id="chart-options-panel" class="panel">
+			<!-- <div id="chart-options-panel" class="panel">
 				<div class="header-panel" onclick="closeChartOptionsPanel()">Chart Options <i class="fas fa-angle-right"></i></div>
 			  	<a href="javascript:void(0)" onclick="clearAll()"><i class="fas fa-trash"></i> Clear All</a>
 			  	
 			  	<hr>
-			</div>			
+			</div>	-->		
 			
 			<div id="countries-selector-panel">
-				<div class="header-panel" onclick="closeCountriesSelectorPanel()">Countries Selector <i class="fas fa-angle-right"></i></div>
+				<div class="header-panel">Countries Selector</div>
 				<form id="search-form" action="javascript:void(0)">
 					<input type="text" placeholder="Search a country..." name="search">
 					<button type="submit" onclick="searchCountry(this.form.search)"><i class="fa fa-search"></i></button>
@@ -75,7 +76,7 @@
 				<div id="search-result-container"></div>
 			</div>
 			
-			<div id="regions-selector-panel">
+		<!-- <div id="regions-selector-panel">
 				<div class="header-panel" onclick="closeRegionsSelectorPanel()">Regions Selector <i class="fas fa-angle-right"></i></div>
 				<label class="container">Africa
 					<input type="checkbox" value="Africa" onchange="checkBoxRegionHandler(this)">
@@ -106,13 +107,13 @@
 					<input type="checkbox" value="World" onchange="checkBoxRegionHandler(this)">
 					<span class="checkmark"></span>
 				</label>
-			</div>
+			</div> -->
 		</div>
-		<div id="accordion-btn-container">
+		<!-- <div id="accordion-btn-container">
 			<div id="chart-options-btn" class="accordion" onclick="openChartOptionsPanel()">Chart Options <i class="fas fa-angle-up"></i></div>
 			<div id="countries-selector-btn" class="accordion" onclick="openCountriesSelectorPanel()">Countries Selector <i class="fas fa-angle-up"></i></div>
 			<div id="regions-selector-btn" class="accordion" onclick="openRegionsSelectorPanel()">Regions Selector <i class="fas fa-angle-up"></i></div>	
-		</div>
+		</div> -->
 	</div>
 	
 	<div id="toast"></div>
