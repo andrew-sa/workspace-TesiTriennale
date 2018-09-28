@@ -7,8 +7,10 @@ var xhttpChart;
 var firstYear = '1995';
 var lastYear = (new Date).getFullYear();
 //var indexYear = 0;
-var animatedChart;
+var animatedChart = new AnimatedBubbleChart();
 //var arrayData;
+var selectedCountries = [];
+//var animatedChartUser = new AnimatedBubbleChart();
 
 /* CHECKBOXS COUNTRIES*/
 function CheckBox(countryCode, countryName)
@@ -101,13 +103,13 @@ function loadCheckboxs()
 //	document.body.style.cursor = "wait";
 	
 	xhttpCheckBoxs = new XMLHttpRequest();
-	xhttpCheckBoxs.open("get", "load_countries", true);
+	xhttpCheckBoxs.open("get", "load_countries_animated_chart", true);
 	xhttpCheckBoxs.setRequestHeader("connection", "close");
 	xhttpCheckBoxs.onreadystatechange = showCheckboxs;
 	xhttpCheckBoxs.send(null);
 }
 
-/* ANIMATED CHART */
+/* ANIMATED CHART (INITIAL) */
 function AnimatedBubbleChart()
 {
 	this.options = {
@@ -153,6 +155,21 @@ function AnimatedBubbleChart()
 	this.arrayYearsData = [];
 	this.years = [];
 	this.index = 0;
+	
+	this.resetArrayYearsData = function()
+	{
+		this.arrayYearsData = [];
+	}
+	
+	this.resetYears = function()
+	{
+		this.years = [];
+	}
+	
+	this.resetIndex = function()
+	{
+		this.index = 0;
+	}
 	
 	this.addYearData = function(arrayData)
 	{
@@ -295,7 +312,7 @@ function showAnimatedChart()
 		var boundaries = resultJSON.boundaries;
 		var dataWrapper = resultJSON.data;
 		
-		animatedChart = new AnimatedBubbleChart();
+//		animatedChart = new AnimatedBubbleChart();
 		
 		animatedChart.options.hAxis.minValue = boundaries.gdppercapita.min;
 		animatedChart.options.hAxis.maxValue = boundaries.gdppercapita.max;
@@ -360,4 +377,162 @@ function loadAnimatedChart()
 	xhttpChart.setRequestHeader("connection", "close");
 	xhttpChart.onreadystatechange = showAnimatedChart;
 	xhttpChart.send(null);
+}
+
+/* ANIMATED CHART (USER) */
+function showAnimatedChartUser()
+{
+	if (xhttpChart.readyState == 4 && xhttpChart.status == 200)
+	{
+//		document.body.style.cursor = "auto";
+		animatedChart.resetArrayYearsData();
+		animatedChart.resetYears();
+		animatedChart.resetIndex();
+		
+		var resultSTR = xhttpChart.responseText;
+		var dataWrapper = JSON.parse(resultSTR);
+		console.log(dataWrapper);
+		
+		for (var i = firstYear; i <= lastYear; i++)
+		{
+			if (dataWrapper[i] != undefined)
+			{
+				var arrayData = new ArrayData();
+				arrayData.insertData(dataWrapper[i]);
+				animatedChart.addYearData(arrayData.data);
+				animatedChart.addYear(i);
+			}
+			else
+			{
+				console.log(i);
+			}
+		}
+		
+		$('#yearsRange').attr('min', animatedChart.years[0]);
+		$('#yearsRange').attr('max', animatedChart.years[animatedChart.years.length - 1]);
+		$('#yearsRange').attr('value', animatedChart.getCurrentYear());
+		document.getElementById('yearsRange').stepDown(animatedChart.years.length);
+		
+		$('#yearsLabel').empty();
+		for (var i = animatedChart.years[0]; i <= animatedChart.years[animatedChart.years.length - 1]; i++)
+		{
+			$('#yearsLabel').append('<span onclick="showYear(this)">' + i + '</span>');
+		}
+		
+		document.getElementById('playButton').disabled = false;
+		document.getElementById('yearsRange').disabled = false;
+		
+		document.getElementById('toast').className = '';
+		
+		console.log(arrayData.data);
+//		animatedChart.setData(arrayData.data);
+		
+		drawAnimatedChart();
+	}
+}
+
+function loadCountryData(clicked)
+{
+	document.getElementById('toast').innerHTML = '<i class="fa fa-circle-notch fa-spin"></i> Loading selected data';
+	document.getElementById('toast').className = 'show';
+	document.getElementById('playButton').disabled = true;
+	document.getElementById('yearsRange').disabled = true;
+	
+	if (null != clicked)
+	{
+		selectedCountries.push(clicked.value);
+	}
+	var codes = '';
+	for (var i = 0; i < selectedCountries.length; i++)
+	{
+		if (i != 0)
+		{
+			codes = codes.concat('-');
+		}
+		codes = codes.concat(selectedCountries[i]);
+	}
+	
+	xhttpChart = new XMLHttpRequest();
+	xhttpChart.open("get", "load_countries_animated_data?" + "codes=" + codes, true);
+	xhttpChart.setRequestHeader("connection", "close");
+	xhttpChart.onreadystatechange = showAnimatedChartUser;
+	xhttpChart.send(null);
+}
+
+function removeCountryData(clicked)
+{
+	var countryCode = clicked.value;
+	selectedCountries.splice(selectedCountries.indexOf(countryCode), 1);
+	if (selectedCountries.length == 0)
+	{
+		$('#animated-chart').empty();
+		$('#animated-chart').append('<p>Select country/ies to show on the chart from right menu</p>');
+		
+		document.getElementById('playButton').disabled = true;
+		document.getElementById('yearsRange').disabled = true;
+		$('#yearsLabel').empty();
+	}
+	else
+	{
+		loadCountryData(null);
+	}
+}
+
+function checkBoxCountryHandler(clicked)
+{
+	var countryCode = clicked.value;
+	var found = false;
+	var i = 0;
+	var index = -1
+	while (!found && i < arrayCheckBoxs.length)
+	{
+		if (arrayCheckBoxs[i].input[0].value == countryCode)
+		{
+			found = true;
+			index = i;
+		}
+		i++;
+	}
+	if (index >= 0)
+	{
+		if (clicked.checked == true)
+		{
+			arrayCheckBoxs[index].input[0].checked = true;
+			copyArrayCheckBoxs[index].input[0].checked = true;
+			loadCountryData(clicked);
+		}
+		else if (clicked.checked == false)
+		{
+			arrayCheckBoxs[index].input[0].checked = false;
+			copyArrayCheckBoxs[index].input[0].checked = false;
+			removeCountryData(clicked);
+		}
+	}
+}
+
+function searchCountry(input)
+{
+	$('#search-result-container').empty();
+	if (input.value.length != 0)
+	{
+		var filter = input.value.toUpperCase();
+//		console.log(filter);
+		for (var i = 0; i < copyArrayCheckBoxs.length; i++)
+		{
+//			console.log(arrayCheckBoxs[i].input[0].name);
+			if (copyArrayCheckBoxs[i].input[0].value.toUpperCase().indexOf(filter) > -1 || copyArrayCheckBoxs[i].input[0].name.toUpperCase().indexOf(filter) > -1)
+			{
+				$('#search-result-container').append(copyArrayCheckBoxs[i].container);
+			}
+		}
+		if ($('#search-result-container').children().length == 0)
+		{
+			$('#search-result-container').append('<p class="search-msg">NO COUNTRY FOUND</p>')
+		}
+		$('#search-result-container').show();
+	}
+	else
+	{
+		$('#search-result-container').hide();
+	}
 }

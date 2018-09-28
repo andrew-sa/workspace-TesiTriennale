@@ -479,23 +479,23 @@ function clearAll()
 	$('#analysis-chart').append('<p>Select country/ies to show on the chart from right menu</p>');
 }
 
-function selectChart(type)
-{
-//	console.log(type);
-	if (typeChart != type)
-	{
-		if (type == 'line')
-		{
-			typeChart = 'line';
-			drawChart();
-		}
-		else if (type == 'bar')
-		{
-			typeChart = 'bar';
-			drawChart();
-		}
-	}
-}
+//function selectChart(type)
+//{
+////	console.log(type);
+//	if (typeChart != type)
+//	{
+//		if (type == 'line')
+//		{
+//			typeChart = 'line';
+//			drawChart();
+//		}
+//		else if (type == 'bar')
+//		{
+//			typeChart = 'bar';
+//			drawChart();
+//		}
+//	}
+//}
 
 function searchCountry(input)
 {

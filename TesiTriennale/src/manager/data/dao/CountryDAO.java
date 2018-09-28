@@ -11,6 +11,7 @@ import com.mysql.jdbc.exceptions.MySQLIntegrityConstraintViolationException;
 
 import exceptions.TupleNotFoundException;
 import manager.connection.DriverManagerConnectionPool;
+import manager.data.extraction.WorldBankDataWrapper;
 import manager.data.model.Country;
 import manager.data.model.GDPPerCapitaData;
 import manager.data.model.NetMigrationData;
@@ -90,6 +91,25 @@ public class CountryDAO {
 		return countries;
 	}
 	
+	public ArrayList<Country> readAllAvailableForAnimatedChart(String firstYear) throws SQLException
+	{
+		ArrayList<Country> countries = new ArrayList<>();
+		Connection con = DriverManagerConnectionPool.getInstance().getConnection();
+		PreparedStatement ps = con.prepareStatement(READ_ALL_FOR_ANIMATED_CHART);
+		ps.setString(1, firstYear);
+		ResultSet rs = ps.executeQuery();
+		while (rs.next())
+		{
+			Country country = new Country(rs.getString(1), rs.getString(2), rs.getString(3));
+			countries.add(country);
+		}
+		con.commit();
+		rs.close();
+		ps.close();
+		DriverManagerConnectionPool.getInstance().releaseConnection(con);
+		return countries;
+	}
+	
 	public ArrayList<String> readRegions() throws SQLException
 	{
 		ArrayList<String> regions = new ArrayList<>();
@@ -113,21 +133,34 @@ public class CountryDAO {
 		if (null != dataType)
 		{
 			Connection con = DriverManagerConnectionPool.getInstance().getConnection();
-			Statement stm = con.createStatement();
+//			Statement stm = con.createStatement();
+			PreparedStatement ps = null;
 			ResultSet rs = null;
 			switch (dataType)
 			{
 				case PopulationData.DATA_TYPE:
-					rs = stm.executeQuery(READ_COUNTRY_FOR_WORLD_BANK_POPULATION_DATA);
+//					rs = stm.executeQuery(READ_COUNTRY_FOR_WORLD_BANK_POPULATION_DATA);
+					ps = con.prepareStatement(READ_COUNTRY_FOR_WORLD_BANK_POPULATION_DATA);
+					ps.setString(1, WorldBankDataWrapper.SOURCE);
+					rs = ps.executeQuery();
 					break;
 				case PovertyData.DATA_TYPE:
-					rs = stm.executeQuery(READ_COUNTRY_FOR_WORLD_BANK_POVERTY_DATA);
+//					rs = stm.executeQuery(READ_COUNTRY_FOR_WORLD_BANK_POVERTY_DATA);
+					ps = con.prepareStatement(READ_COUNTRY_FOR_WORLD_BANK_POVERTY_DATA);
+					ps.setString(1, WorldBankDataWrapper.SOURCE);
+					rs = ps.executeQuery();
 					break;
 				case NetMigrationData.DATA_TYPE:
-					rs = stm.executeQuery(READ_COUNTRY_FOR_WORLD_BANK_NET_MIGRATION_DATA);
+//					rs = stm.executeQuery(READ_COUNTRY_FOR_WORLD_BANK_NET_MIGRATION_DATA);
+					ps = con.prepareStatement(READ_COUNTRY_FOR_WORLD_BANK_NET_MIGRATION_DATA);
+					ps.setString(1, WorldBankDataWrapper.SOURCE);
+					rs = ps.executeQuery();
 					break;
 				case GDPPerCapitaData.DATA_TYPE:
-					rs = stm.executeQuery(READ_COUNTRY_FOR_WORLD_BANK_GDP_PER_CAPITA_DATA);
+//					rs = stm.executeQuery(READ_COUNTRY_FOR_WORLD_BANK_GDP_PER_CAPITA_DATA);
+					ps = con.prepareStatement(READ_COUNTRY_FOR_WORLD_BANK_GDP_PER_CAPITA_DATA);
+					ps.setString(1, WorldBankDataWrapper.SOURCE);
+					rs = ps.executeQuery();
 					break;
 				default:
 					break;
@@ -146,7 +179,10 @@ public class CountryDAO {
 				System.err.println("Invalid Data Type");
 				con.commit();
 			}
-			stm.close();
+			if (null != ps)
+			{
+				ps.close();
+			}
 			DriverManagerConnectionPool.getInstance().releaseConnection(con);
 		}
 		else
@@ -192,11 +228,12 @@ public class CountryDAO {
 	private static final String CREATE = "INSERT INTO country VALUES (?, ?, ?)";
 	private static final String READ = "SELECT * FROM country WHERE Code = ?";
 	private static final String READ_ALL = "SELECT DISTINCT c.code, c.name, c.region FROM country c, countrypoverty p WHERE c.Code = p.Country";
+	private static final String READ_ALL_FOR_ANIMATED_CHART = "SELECT DISTINCT c.code, c.name, c.region FROM country c, countrypoverty p WHERE c.Code = p.Country AND p.Year >= ?";
 	private static final String READ_REGIONS = "SELECT DISTINCT c.region FROM country c, countrypoverty p WHERE c.Code = p.Country";
-	private static final String READ_COUNTRY_FOR_WORLD_BANK_POPULATION_DATA = "SELECT * FROM country WHERE Code NOT IN (SELECT DISTINCT Country FROM countrypopulation)";
-	private static final String READ_COUNTRY_FOR_WORLD_BANK_POVERTY_DATA = "SELECT * FROM country WHERE Code NOT IN (SELECT DISTINCT Country FROM countrypoverty)";
-	private static final String READ_COUNTRY_FOR_WORLD_BANK_NET_MIGRATION_DATA = "SELECT * FROM country WHERE Code NOT IN (SELECT DISTINCT Country FROM countrynetmigration)";
-	private static final String READ_COUNTRY_FOR_WORLD_BANK_GDP_PER_CAPITA_DATA = "SELECT * FROM country WHERE Code NOT IN (SELECT DISTINCT Country FROM countrygdppercapita)";
+	private static final String READ_COUNTRY_FOR_WORLD_BANK_POPULATION_DATA = "SELECT * FROM country WHERE Code NOT IN (SELECT DISTINCT Country FROM countrypopulation WHERE Source != ?)";
+	private static final String READ_COUNTRY_FOR_WORLD_BANK_POVERTY_DATA = "SELECT * FROM country WHERE Code NOT IN (SELECT DISTINCT Country FROM countrypoverty WHERE Source != ?)";
+	private static final String READ_COUNTRY_FOR_WORLD_BANK_NET_MIGRATION_DATA = "SELECT * FROM country WHERE Code NOT IN (SELECT DISTINCT Country FROM countrynetmigration WHERE Source != ?)";
+	private static final String READ_COUNTRY_FOR_WORLD_BANK_GDP_PER_CAPITA_DATA = "SELECT * FROM country WHERE Code NOT IN (SELECT DISTINCT Country FROM countrygdppercapita WHERE Source != ?)";
 	private static final String DELETE = "DELETE FROM country";
 	
 }

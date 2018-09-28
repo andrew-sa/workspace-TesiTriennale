@@ -27,6 +27,7 @@ function showYear(labelElement)
 {
 	var year = labelElement.innerText;
 	var currentYear = animatedChart.getCurrentYear();
+	document.getElementById('playButton').classList.remove("paused");
 	if (year > currentYear)
 	{
 		console.log(year - currentYear);

@@ -30,6 +30,7 @@ public class CountryPopulationDataDAO {
 			ps.setString(2, pd.getYear());
 			ps.setDouble(3, pd.getValue());
 			ps.setString(4, pd.getSource());
+			ps.setBoolean(5, pd.isCalculated());
 			try
 			{
 //				System.out.println("SAVING: " + pd);
@@ -125,7 +126,7 @@ public class CountryPopulationDataDAO {
 //	private static final Logger LOGGER = Logger.getLogger(PopulationData.DATA_TYPE);
 	private static final Logger LOGGER = Logger.getLogger("updating");
 	
-	private static final String CREATE = "INSERT INTO countrypopulation VALUES (?, ?, ?, ?)";
+	private static final String CREATE = "INSERT INTO countrypopulation VALUES (?, ?, ?, ?, ?)";
 	private static final String READ = "SELECT * FROM countrypopulation WHERE Country = ?";
 	private static final String READ_BY_REGION = "SELECT cp.Country, cp.Year, cp.Value FROM country c, countrypopulation cp WHERE c.Code = cp.Country AND c.Region = ?";
 	private static final String READ_VALUE_BY_COUNTRY_AND_YEAR = "SELECT Value FROM countrypopulation WHERE Country = ? AND Year = ?";

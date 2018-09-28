@@ -30,6 +30,7 @@ public class CountryGDPPerCapitaDataDAO {
 			ps.setString(2, gdp.getYear());
 			ps.setDouble(3, gdp.getValue());
 			ps.setString(4, gdp.getSource());
+			ps.setBoolean(5, gdp.isCalculated());
 			try
 			{
 				LOGGER.info("SAVING: " + gdp);
@@ -53,6 +54,24 @@ public class CountryGDPPerCapitaDataDAO {
 		ArrayList<CountryGDPPerCapitaData> data = new ArrayList<>();
 		Connection con = DriverManagerConnectionPool.getInstance().getConnection();
 		PreparedStatement ps = con.prepareStatement(READ);
+		ps.setString(1, country.getCode());
+		ResultSet rs = ps.executeQuery();
+		while (rs.next())
+		{
+			data.add(new CountryGDPPerCapitaData(rs.getString(1), rs.getString(2), rs.getDouble(3)));
+		}
+		con.commit();
+		rs.close();
+		ps.close();
+		DriverManagerConnectionPool.getInstance().releaseConnection(con);
+		return data;
+	}
+	
+	public ArrayList<CountryGDPPerCapitaData> readReal(Country country) throws SQLException
+	{
+		ArrayList<CountryGDPPerCapitaData> data = new ArrayList<>();
+		Connection con = DriverManagerConnectionPool.getInstance().getConnection();
+		PreparedStatement ps = con.prepareStatement(READ_REAL);
 		ps.setString(1, country.getCode());
 		ResultSet rs = ps.executeQuery();
 		while (rs.next())
@@ -123,8 +142,9 @@ public class CountryGDPPerCapitaDataDAO {
 	
 	private static final Logger LOGGER = Logger.getLogger("updating");
 	
-	private static final String CREATE = "INSERT INTO countrygdppercapita VALUES (?, ?, ?, ?)";
+	private static final String CREATE = "INSERT INTO countrygdppercapita VALUES (?, ?, ?, ?, ?)";
 	private static final String READ = "SELECT * FROM countrygdppercapita WHERE Country = ?";
+	private static final String READ_REAL = "SELECT * FROM countrygdppercapita WHERE Country = ? AND Calculated = false";
 	private static final String READ_BY_REGION = "SELECT cgdp.Country, cgdp.Year, cgdp.Value FROM country c, countrygdppercapita cgdp WHERE c.Code = cgdp.Country AND c.Region = ?";
 	private static final String READ_VALUE_BY_COUNTRY_AND_YEAR = "SELECT Value FROM countrygdppercapita WHERE Country = ? AND Year = ?";
 	private static final String DELETE = "DELETE FROM countrygdppercapita WHERE Source = ?";

@@ -21,7 +21,6 @@ import manager.data.model.PovertyData;
 import manager.data.model.RegionPovertyData;
 import manager.data.transformation.EUDataTrasformer;
 import manager.data.transformation.USADataTrasformer;
-import manager.data.transformation.WorldBankDataTrasformer;
 
 public class LoadPovertyData {
 

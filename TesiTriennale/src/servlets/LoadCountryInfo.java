@@ -132,7 +132,7 @@ public class LoadCountryInfo extends HttpServlet {
 	private ArrayList<CountryPovertyData> loadPovertyData(Country country) throws SQLException
 	{
 		CountryPovertyDataDAO povertyDataDAO = new CountryPovertyDataDAO();
-		ArrayList<CountryPovertyData> povertyData = povertyDataDAO.readValuesOfTheCountry(country);
+		ArrayList<CountryPovertyData> povertyData = povertyDataDAO.readRealValuesOfTheCountry(country);
 		return povertyData;
 	}
 	
@@ -146,7 +146,7 @@ public class LoadCountryInfo extends HttpServlet {
 	private ArrayList<CountryGDPPerCapitaData> loadGDPPerCapitaData(Country country) throws SQLException
 	{
 		CountryGDPPerCapitaDataDAO gdpPerCapitaDataDAO = new CountryGDPPerCapitaDataDAO();
-		ArrayList<CountryGDPPerCapitaData> gdpPerCapitaData = gdpPerCapitaDataDAO.read(country);
+		ArrayList<CountryGDPPerCapitaData> gdpPerCapitaData = gdpPerCapitaDataDAO.readReal(country);
 		return gdpPerCapitaData;
 	}
 	

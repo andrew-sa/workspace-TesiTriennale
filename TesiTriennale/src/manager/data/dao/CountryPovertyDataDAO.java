@@ -31,6 +31,7 @@ public class CountryPovertyDataDAO {
 			ps.setString(2, pd.getYear());
 			ps.setDouble(3, pd.getValue());
 			ps.setString(4, pd.getSource());
+			ps.setBoolean(5, pd.isCalculated());
 			try
 			{
 				LOGGER.info("SAVING: " + pd);
@@ -111,6 +112,24 @@ public class CountryPovertyDataDAO {
 		ArrayList<CountryPovertyData> data = new ArrayList<>();
 		Connection con = DriverManagerConnectionPool.getInstance().getConnection();
 		PreparedStatement ps = con.prepareStatement(READ_VALUES);
+		ps.setString(1, country.getCode());
+		ResultSet rs = ps.executeQuery();
+		while (rs.next())
+		{
+			data.add(new CountryPovertyData(country.getCode(), rs.getString(1), rs.getDouble(2)));
+		}
+		con.commit();
+		rs.close();
+		ps.close();
+		DriverManagerConnectionPool.getInstance().releaseConnection(con);
+		return data;
+	}
+	
+	public ArrayList<CountryPovertyData> readRealValuesOfTheCountry(Country country) throws SQLException
+	{
+		ArrayList<CountryPovertyData> data = new ArrayList<>();
+		Connection con = DriverManagerConnectionPool.getInstance().getConnection();
+		PreparedStatement ps = con.prepareStatement(READ_REAL_VALUES);
 		ps.setString(1, country.getCode());
 		ResultSet rs = ps.executeQuery();
 		while (rs.next())
@@ -209,12 +228,13 @@ public class CountryPovertyDataDAO {
 //	private static final Logger LOGGER = Logger.getLogger(PovertyData.DATA_TYPE);
 	private static final Logger LOGGER = Logger.getLogger("updating");
 	
-	private static final String CREATE = "INSERT INTO countrypoverty VALUES (?, ?, ?, ?)";
+	private static final String CREATE = "INSERT INTO countrypoverty VALUES (?, ?, ?, ?, ?)";
 //	private static final String READ_COUNTRIES = "SELECT DISTINCT Country FROM countrypoverty";
-	private static final String READ_LAST_YEAR_AVAILABLE_BY_COUNTRY = "SELECT Country, MAX(Year) FROM countrypoverty GROUP BY Country";
+	private static final String READ_LAST_YEAR_AVAILABLE_BY_COUNTRY = "SELECT Country, MAX(Year) FROM countrypoverty WHERE Calculated = false GROUP BY Country";
 	private static final String READ_VALUE_BY_KEY = "SELECT Value FROM countrypoverty WHERE Country = ? AND Year = ?";
 //	private static final String READ_VALUE_AND_NAME_BY_KEY = "SELECT Value, Name FROM country, poverty WHERE Country = ? AND Year = ? AND Code = Country";
 	private static final String READ_VALUES = "SELECT Year, Value FROM countrypoverty WHERE Country = ?";
+	private static final String READ_REAL_VALUES = "SELECT Year, Value FROM countrypoverty WHERE Country = ? AND Calculated = false";
 	private static final String READ_BY_REGION_AND_YEAR = "SELECT p.Country, p.Year, p.Value, p.Source FROM country c, countrypoverty p WHERE c.Region = ? AND p.Year = ? AND c.Code = p.Country";
 	private static final String READ_VALUE_BY_COUNTRY_AND_YEAR = "SELECT Value FROM countrypoverty WHERE Country = ? AND Year = ?";
 	private static final String READ_YEARS = "SELECT DISTINCT Year FROM countrypoverty WHERE Year >= ?";

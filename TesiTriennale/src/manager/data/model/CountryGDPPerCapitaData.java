@@ -14,6 +14,12 @@ public CountryGDPPerCapitaData() {
 		super(name, year, value);
 		this.source = source;
 	}
+	
+	public CountryGDPPerCapitaData(String name, String year, double value, String source, boolean calculated) {
+		super(name, year, value);
+		this.source = source;
+		this.calculated = calculated;
+	}
 
 	public boolean equals(Object otherObject)
 	{
@@ -26,7 +32,7 @@ public CountryGDPPerCapitaData() {
 	
 	public String toString()
 	{
-		return super.toString() + "[source=" + source + "]";
+		return super.toString() + "[source=" + source + ", calculated=" + calculated + "]";
 	}
 	
 	/**
@@ -43,6 +49,21 @@ public CountryGDPPerCapitaData() {
 		this.source = source;
 	}
 	
+	/**
+	 * @return the calculated
+	 */
+	public boolean isCalculated() {
+		return calculated;
+	}
+
+	/**
+	 * @param calculated the calculated to set
+	 */
+	public void setCalculated(boolean calculated) {
+		this.calculated = calculated;
+	}
+
 	private String source;
+	private boolean calculated;
 	
 }

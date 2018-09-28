@@ -80,7 +80,7 @@ public class LoadCountryPovertyData extends HttpServlet {
 				JSONObject result = new JSONObject();
 				JSONArray array = new JSONArray();
 				CountryPovertyDataDAO povertyDataDAO = new CountryPovertyDataDAO();
-				ArrayList<CountryPovertyData> povertyData = povertyDataDAO.readValuesOfTheCountry(country);
+				ArrayList<CountryPovertyData> povertyData = povertyDataDAO.readRealValuesOfTheCountry(country);
 				for (CountryPovertyData pd: povertyData)
 				{
 					JSONObject data = new JSONObject();

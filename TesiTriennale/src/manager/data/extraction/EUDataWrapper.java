@@ -13,6 +13,7 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.HttpRequest;
 
+import manager.data.model.CompareToYear;
 import manager.data.model.CountryNetMigrationData;
 import manager.data.model.CountryPopulationData;
 import manager.data.model.CountryPovertyData;
@@ -67,7 +68,7 @@ public class EUDataWrapper {
 				{
 					Float value = Float.valueOf(resultObj.query("/value/" + (countryNumber * yearsSize + yearNumber)).toString());
 					System.out.println("[" + countryCode + ", " + year + ", " + value + "]");
-					data.add(new CountryPopulationData(countryCode, year, value, SOURCE));
+					data.add(new CountryPopulationData(countryCode, year, value, SOURCE, false));
 				}
 			}
 //			System.out.println();
@@ -104,6 +105,7 @@ public class EUDataWrapper {
 //		System.out.println();
 		while (c.hasNext())
 		{
+			ArrayList<CountryPovertyData> countryData = new ArrayList<>();
 			String countryCode = c.next();
 			LOGGER.info("EXTRACTING: " + countryCode + ", " + PovertyData.DATA_TYPE + ", " + EUDataWrapper.SOURCE);
 //			System.out.println(countryCode);
@@ -121,12 +123,76 @@ public class EUDataWrapper {
 				{
 					double value = Double.valueOf(resultObj.query("/value/" + (countryNumber * yearsSize + yearNumber)).toString());
 					System.out.println("[" + countryCode + ", " + year + ", " + value + "]");
-					data.add(new CountryPovertyData(countryCode, year, value, SOURCE));
+//					data.add(new CountryPovertyData(countryCode, year, value, SOURCE, false));
+					countryData.add(new CountryPovertyData(countryCode, year, value, SOURCE, false));
 				}
 			}
 //			System.out.println();
+		  ArrayList<CountryPovertyData> allCountryData = calculateInterpolatedValus(countryData);
+		  System.out.println("Data WITHOUT interpolated values: " + countryData);
+		  System.out.println("Data WITH interpolated values: " + allCountryData);
+		  data.addAll(allCountryData);
 		}
 		return data;
+	}
+	
+	private ArrayList<CountryPovertyData> calculateInterpolatedValus(ArrayList<CountryPovertyData> realData)
+	{
+		if (realData.size() < 2)
+		{
+			return realData;
+		}
+		else
+		{
+			realData.sort(new CompareToYear());
+			ArrayList<CountryPovertyData> data = new ArrayList<>();
+			final String country = realData.get(0).getName();
+			int i;
+			for (i = 0; i < realData.size() - 1; i++)
+			{
+				data.add(realData.get(i));
+				int firstYear = Integer.valueOf(realData.get(i).getYear());
+				int secondYear = Integer.valueOf(realData.get(i + 1).getYear());
+				if (secondYear - firstYear > 1)
+				{
+					double hole = secondYear - firstYear;
+					if (realData.get(i).getValue() < realData.get(i + 1).getValue())
+					{
+						double gap = realData.get(i + 1).getValue() - realData.get(i).getValue();
+						double annualGap = gap / hole;
+						for (int j = 1; j < hole; j++)
+						{
+							CountryPovertyData pd = new CountryPovertyData();
+							pd.setName(country);
+							pd.setYear(String.valueOf(firstYear + j));
+							pd.setValue(realData.get(i).getValue() + annualGap * j);
+							pd.setSource(EUDataWrapper.SOURCE);
+							pd.setCalculated(true);
+							System.out.println(pd);
+							data.add(pd);
+						}
+					}
+					else
+					{
+						double gap = realData.get(i).getValue() - realData.get(i + 1).getValue();
+						double annualGap = gap / hole;
+						for (int j = 1; j < hole; j++)
+						{
+							CountryPovertyData pd = new CountryPovertyData();
+							pd.setName(country);
+							pd.setYear(String.valueOf(firstYear + j));
+							pd.setValue(realData.get(i).getValue() - annualGap * j);
+							pd.setSource(EUDataWrapper.SOURCE);
+							pd.setCalculated(true);
+							System.out.println(pd);
+							data.add(pd);
+						}
+					}
+				}
+			}
+			data.add(realData.get(i));
+			return data;
+		}
 	}
 	
 //	public int extractPopulationData(String countryCode, String year) throws UnirestException, JSONException

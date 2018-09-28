@@ -44,7 +44,7 @@ public class USADataWrapper {
 			String year = result.getJSONArray(i).getString(2);
 			double value = Double.valueOf(result.getJSONArray(i).getString(0));
 //			System.out.println("[" + country + ", " + year + ", " + value + "]");
-			data.add(new CountryPopulationData(COUNTRY, year, value, SOURCE));
+			data.add(new CountryPopulationData(COUNTRY, year, value, SOURCE, false));
 		}
 		return data;
 	}
@@ -71,7 +71,7 @@ public class USADataWrapper {
 			String year = result.getJSONArray(i).getString(1);
 			double value = Double.valueOf(result.getJSONArray(i).getString(0));
 //			System.out.println("[" + country + ", " + year + ", " + value + "]");
-			data.add(new CountryPovertyData(COUNTRY, year, value, SOURCE));
+			data.add(new CountryPovertyData(COUNTRY, year, value, SOURCE, false));
 		}
 		return data;
 	}

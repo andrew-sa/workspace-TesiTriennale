@@ -13,11 +13,13 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.HttpRequest;
 
+import manager.data.model.CompareToYear;
 import manager.data.model.Country;
 import manager.data.model.CountryGDPPerCapitaData;
 import manager.data.model.CountryNetMigrationData;
 import manager.data.model.CountryPopulationData;
 import manager.data.model.CountryPovertyData;
+import manager.data.model.Data;
 import manager.data.model.GDPPerCapitaData;
 import manager.data.model.NetMigrationData;
 import manager.data.model.PopulationData;
@@ -274,6 +276,7 @@ public class WorldBankDataWrapper {
 	    	System.out.println(req.getUrl());
 	    	try
 	    	{
+	    		
 	    		LOGGER.info("EXTRACTING: " + c.getCode() + ", " + PopulationData.DATA_TYPE + ", " + WorldBankDataWrapper.SOURCE);
 		    	JSONArray result = req.asJson().getBody().getArray();
 		    	int pages = result.getJSONObject(0).getInt("pages");
@@ -291,7 +294,8 @@ public class WorldBankDataWrapper {
 			    			String year = dataObj.getString("date");
 			    			double value = Double.valueOf(String.valueOf(dataObj.get("value")));
 			    			System.out.println("[" + country + ", " + year + ", " + value + "]");
-			    			data.add(new CountryPopulationData(country, year, value, SOURCE));
+			    			data.add(new CountryPopulationData(country, year, value, SOURCE, false));
+			    			
 			    		}
 			    	}
 			    	fields.remove("page");
@@ -326,6 +330,7 @@ public class WorldBankDataWrapper {
 		    System.out.println(req.getUrl());
 		    try
 		    {
+		    	ArrayList<CountryPovertyData> countryData = new ArrayList<>();
 		    	LOGGER.info("EXTRACTING: " + c.getCode() + ", " + PovertyData.DATA_TYPE + ", " + WorldBankDataWrapper.SOURCE);
 //			    System.out.println(req.asJson().getBody().getArray());
 			    JSONArray result = req.asJson().getBody().getArray();
@@ -350,11 +355,16 @@ public class WorldBankDataWrapper {
 			    			String year = dataObj.getString("date");
 			    			double value = Double.valueOf(String.valueOf(dataObj.get("value")));
 			    			System.out.println("[" + country + ", " + year + ", " + value + "]");
-			    			data.add(new CountryPovertyData(country, year, value, SOURCE));
+//			    			data.add(new CountryPovertyData(country, year, value, SOURCE, false));
+			    			countryData.add(new CountryPovertyData(country, year, value, SOURCE, false));
 			    		}
 			    	}
 			    	fields.remove("page");
 			    }
+			    ArrayList<CountryPovertyData> allCountryData = calculateInterpolatedValus(countryData);
+			    System.out.println("Data WITHOUT interpolated values: " + countryData);
+			    System.out.println("Data WITH interpolated values: " + allCountryData);
+			    data.addAll(allCountryData);
 		    }
 		    catch (JSONException e)
 	    	{
@@ -442,7 +452,7 @@ public class WorldBankDataWrapper {
 			    			String year = dataObj.getString("date");
 			    			double value = Double.valueOf(String.valueOf(dataObj.get("value")));
 			    			System.out.println("[" + country + ", " + year + ", " + value + "]");
-			    			data.add(new CountryGDPPerCapitaData(country, year, value, SOURCE));
+			    			data.add(new CountryGDPPerCapitaData(country, year, value, SOURCE, false));
 			    		}
 			    	}
 			    	fields.remove("page");
@@ -456,6 +466,102 @@ public class WorldBankDataWrapper {
 	    }
 	    return data;
 	}
+	
+	private ArrayList<CountryPovertyData> calculateInterpolatedValus(ArrayList<CountryPovertyData> realData)
+	{
+		if (realData.size() < 2)
+		{
+			return realData;
+		}
+		else
+		{
+			realData.sort(new CompareToYear());
+			ArrayList<CountryPovertyData> data = new ArrayList<>();
+			final String country = realData.get(0).getName();
+			int i;
+			for (i = 0; i < realData.size() - 1; i++)
+			{
+				data.add(realData.get(i));
+				int firstYear = Integer.valueOf(realData.get(i).getYear());
+				int secondYear = Integer.valueOf(realData.get(i + 1).getYear());
+				if (secondYear - firstYear > 1)
+				{
+					double hole = secondYear - firstYear;
+					if (realData.get(i).getValue() < realData.get(i + 1).getValue())
+					{
+						double gap = realData.get(i + 1).getValue() - realData.get(i).getValue();
+						double annualGap = gap / hole;
+						for (int j = 1; j < hole; j++)
+						{
+							CountryPovertyData pd = new CountryPovertyData();
+							pd.setName(country);
+							pd.setYear(String.valueOf(firstYear + j));
+							pd.setValue(realData.get(i).getValue() + annualGap * j);
+							pd.setSource(WorldBankDataWrapper.SOURCE);
+							pd.setCalculated(true);
+							System.out.println(pd);
+							data.add(pd);
+						}
+					}
+					else
+					{
+						double gap = realData.get(i).getValue() - realData.get(i + 1).getValue();
+						double annualGap = gap / hole;
+						for (int j = 1; j < hole; j++)
+						{
+							CountryPovertyData pd = new CountryPovertyData();
+							pd.setName(country);
+							pd.setYear(String.valueOf(firstYear + j));
+							pd.setValue(realData.get(i).getValue() - annualGap * j);
+							pd.setSource(WorldBankDataWrapper.SOURCE);
+							pd.setCalculated(true);
+							System.out.println(pd);
+							data.add(pd);
+						}
+					}
+				}
+			}
+			data.add(realData.get(i));
+			return data;
+		}
+	}
+	
+//	private ArrayList<Data> calculateInterpolatedValus(ArrayList<Data> realData)
+//	{
+//		if (realData.size() < 2)
+//		{
+//			return realData;
+//		}
+//		else
+//		{
+//			ArrayList<Data> data = new ArrayList<>();
+//			if (realData.get(0) instanceof CountryPopulationData)
+//			{
+//				
+//			}
+//			else if (realData.get(0) instanceof CountryPovertyData)
+//			{
+//				data.add(realData.get(0));
+//				for (int i = 0; i < realData.size() - 1; i++)
+//				{
+//					int firstYear = Integer.valueOf(realData.get(i + 1).getYear());
+//					if (Integer.realData.get(i + 1).getYear() - realData.get(i).getYear() > 1)
+//					{
+//						
+//					}
+//				}
+//			}
+//			else if (realData.get(0) instanceof CountryGDPPerCapitaData)
+//			{
+//				
+//			}
+//			else
+//			{
+//				data.addAll(realData);
+//			}
+//			return data;
+//		}
+//	}
 	
 //	public static void main(String[] args) throws UnirestException {
 //		ArrayList<Country> c = new ArrayList<>();
