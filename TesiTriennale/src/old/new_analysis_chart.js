@@ -3,47 +3,6 @@ var xhttpYears;
 
 var arrayCollapsibleRegions = [];
 var lastYear = (new Date).getFullYear();
-//var arrayData = [
-//	['Year'],
-////	['2000'],
-////	['2001'],
-////	['2002'],
-////	['2003'],
-////	['2004'],
-////	['2005'],
-////	['2006'],
-////    ['2007'],
-////    ['2008'],
-////    ['2009'],
-////    ['2010'],
-////    ['2011'],
-////    ['2012'],
-////    ['2013'],
-////    ['2014'],
-////    ['2015'],
-////    ['2016'],
-////    ['2017'],
-////    ['2018']
-//	[new Date(2000, 11, 31)],
-//	[new Date(2001, 11, 31)],
-//	[new Date(2002, 11, 31)],
-//	[new Date(2003, 11, 31)],
-//	[new Date(2004, 11, 31)],
-//	[new Date(2005, 11, 31)],
-//	[new Date(2006, 11, 31)],
-//	[new Date(2007, 11, 31)],
-//	[new Date(2008, 11, 31)],
-//	[new Date(2009, 11, 31)],
-//	[new Date(2010, 11, 31)],
-//	[new Date(2011, 11, 31)],
-//	[new Date(2012, 11, 31)],
-//	[new Date(2013, 11, 31)],
-//	[new Date(2014, 11, 31)],
-//	[new Date(2015, 11, 31)],
-//	[new Date(2016, 11, 31)],
-//	[new Date(2017, 11, 31)],
-//	[new Date(2018, 11, 31)],
-//	];
 var arrayCheckBoxs = [];
 var copyArrayCheckBoxs = [];
 var povertyAnalysisChart = new AnalysisChart();
@@ -56,6 +15,9 @@ var dataTypes = [POVERTY, NET_MIGRATION, GDP_PER_CAPITA];
 var currentDataType = POVERTY;
 
 //var regionArrayCheckBoxs = [];
+var currentRegionIndex = null;
+var currentRegionCountries = null;
+var regionAction = null;
 
 /* CHECK BOXS */
 function CheckBox(countryCode, countryName)
@@ -469,6 +431,57 @@ function loadInitialChart()
 	}
 }
 
+function loadRegionData()
+{
+	console.log('Loading');
+	if (null != currentRegionCountries && null != currentRegionIndex)
+	{
+		if (currentRegionIndex < currentRegionCountries.length)
+		{
+			currentRegionIndex++;
+			if (currentRegionCountries[currentRegionIndex - 1].checked == true)
+			{
+				currentRegionCountries[currentRegionIndex - 1].checked = false;
+				checkBoxCountryHandler(currentRegionCountries[currentRegionIndex - 1]);
+			}
+		}
+		else
+		{
+			currentRegionCountries = null;
+			currentRegionIndex = null;
+			regionAction = null;
+		}
+	}
+	else
+	{
+		console.log("what!");
+	}
+}
+
+function removeRegionData()
+{
+	console.log('Removing');
+	if (null != currentRegionCountries && null != currentRegionIndex)
+	{
+		console.log('NOT NULL');
+		if (currentRegionIndex < currentRegionCountries.length)
+		{
+			currentRegionIndex++;
+			if (currentRegionCountries[currentRegionIndex - 1].checked == true)
+			{
+				currentRegionCountries[currentRegionIndex - 1].checked = false;
+				checkBoxCountryHandler(currentRegionCountries[currentRegionIndex - 1]);
+			}
+		}
+		else
+		{
+			currentRegionCountries = null;
+			currentRegionIndex = null;
+			regionAction = null;
+		}
+	}
+}
+
 function loadDataChart()
 {
 	if (xhttp.readyState == 4 && xhttp.status == 200)
@@ -554,7 +567,28 @@ function loadDataChart()
 			}
 		}
 		
-		drawChart();
+		console.log(regionAction);
+		if (null == regionAction)
+		{
+			drawChart();
+		}
+		else if (currentRegionIndex == currentRegionCountries.length)
+		{
+			regionAction = null;
+			drawChart();
+		}
+		else if (regionAction == 'load')
+		{
+			loadRegionData();
+		}
+		else if (regionAction == 'remove')
+		{
+			removeRegionData();
+		}
+		else
+		{
+			drawChart();
+		}
 	}
 }
 
@@ -731,6 +765,77 @@ function changeDataType(input)
 	{
 		currentDataType = input.value;
 		drawChart();
+	}
+}
+
+function loadRegionDataHandler(clicked)
+{
+	var region = clicked.value;
+	var found = false;
+	var i = 0;
+	var countries = null;
+	if (null != document.getElementById(region))
+	{
+		countries = document.getElementById(region).getElementsByClassName('country-checkbox');
+	}
+	if (null != countries)
+	{
+//		console.log(countries);
+//		for (i = 0; i < countries.length; i++)
+//		{
+//			if (countries[i].checked == false)
+//			{
+//				countries[i].checked = true;
+//				checkBoxCountryHandler(countries[i]);
+//			}
+//		}
+		regionAction = 'load';
+		currentRegionIndex = 0;
+		currentRegionCountries = countries;
+//		console.log(currentRegionCountries);
+		loadRegionData();
+	}
+}
+
+function removeRegionDataHandler(clicked)
+{
+	var region = clicked.value;
+	var found = false;
+	var i = 0;
+	var countries = null;
+	if (null != document.getElementById(region))
+	{
+		countries = document.getElementById(region).getElementsByClassName('country-checkbox');
+	}
+	if (null != countries)
+	{
+//		console.log(countries);
+//		for (i = 0; i < countries.length; i++)
+//		{
+//			if (countries[i].checked == true)
+//			{
+//				countries[i].checked = false;
+//				checkBoxCountryHandler(countries[i]);
+//			}
+//		}
+		regionAction = 'remove';
+		currentRegionIndex = 0;
+		currentRegionCountries = countries;
+//		console.log(currentRegionCountries.length);
+//		console.log(currentRegionCountries[48]);
+		removeRegionData();
+	}
+}
+
+function checkBoxRegionHandler(clicked)
+{
+	if (clicked.checked == true)
+	{
+		loadRegionDataHandler(clicked);
+	}
+	else if (clicked.checked == false)
+	{
+		removeRegionDataHandler(clicked);
 	}
 }
 

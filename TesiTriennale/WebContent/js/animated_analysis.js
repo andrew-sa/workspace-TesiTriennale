@@ -480,6 +480,8 @@ function removeCountryData(clicked)
 
 function checkBoxCountryHandler(clicked)
 {
+	document.getElementById('playButton').classList.remove("paused");
+	
 	var countryCode = clicked.value;
 	var found = false;
 	var i = 0;

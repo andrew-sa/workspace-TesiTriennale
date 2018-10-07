@@ -1,6 +1,8 @@
 package manager.data.extraction;
 
+import java.sql.Date;
 import java.util.ArrayList;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -562,6 +564,86 @@ public class WorldBankDataWrapper {
 //			return data;
 //		}
 //	}
+	
+	public Date lastUpdateDate(String dataType) throws UnirestException
+	{
+		switch (dataType)
+		{
+			case PopulationData.DATA_TYPE:
+				return populationLastUpdateDate();
+			case PovertyData.DATA_TYPE:
+				return povertyLastUpdateDate();
+			case NetMigrationData.DATA_TYPE:
+				return netMigrationLastUpdateDate();
+			case GDPPerCapitaData.DATA_TYPE:
+				return gdpPerCapitaDataLastUpdateDate();
+			default:
+				return null;
+		}
+	}
+	
+	public Date populationLastUpdateDate() throws UnirestException
+	{
+		final String restAPI = "https://api.worldbank.org/v2/";
+		final String countrySelector = "countries/";
+		final String dataset = "indicators/SP.POP.TOTL";
+		Map<String, Object> fields = new HashMap<>();
+	    fields.put("format", "json");
+	    HttpRequest req = Unirest.get(restAPI + countrySelector + dataset).queryString(fields);
+	    JSONArray result = req.asJson().getBody().getArray();
+		String dateSTR = ((JSONObject) result.get(0)).getString("lastupdated");
+		Date updateDate = getDate(dateSTR);
+		return updateDate;
+	}
+	
+	public Date povertyLastUpdateDate() throws UnirestException
+	{
+		final String restAPI = "https://api.worldbank.org/v2/";
+		final String countrySelector = "countries/";
+		final String dataset = "indicators/SI.POV.NAHC";
+		Map<String, Object> fields = new HashMap<>();
+	    fields.put("format", "json");
+	    HttpRequest req = Unirest.get(restAPI + countrySelector + dataset).queryString(fields);
+	    JSONArray result = req.asJson().getBody().getArray();
+		String dateSTR = ((JSONObject) result.get(0)).getString("lastupdated");
+		Date updateDate = getDate(dateSTR);
+		return updateDate;
+	}
+	
+	public Date netMigrationLastUpdateDate() throws UnirestException
+	{
+		final String restAPI = "https://api.worldbank.org/v2/";
+		final String countrySelector = "countries/";
+		final String dataset = "indicators/SM.POP.NETM";
+		Map<String, Object> fields = new HashMap<>();
+	    fields.put("format", "json");
+	    HttpRequest req = Unirest.get(restAPI + countrySelector + dataset).queryString(fields);
+	    JSONArray result = req.asJson().getBody().getArray();
+		String dateSTR = ((JSONObject) result.get(0)).getString("lastupdated");
+		Date updateDate = getDate(dateSTR);
+		return updateDate;
+	}
+	
+	public Date gdpPerCapitaDataLastUpdateDate() throws UnirestException
+	{
+		final String restAPI = "https://api.worldbank.org/v2/";
+		final String countrySelector = "countries/";
+		final String dataset = "indicators/NY.GDP.PCAP.PP.CD";
+		Map<String, Object> fields = new HashMap<>();
+	    fields.put("format", "json");
+	    HttpRequest req = Unirest.get(restAPI + countrySelector + dataset).queryString(fields);
+	    JSONArray result = req.asJson().getBody().getArray();
+		String dateSTR = ((JSONObject) result.get(0)).getString("lastupdated");
+		Date updateDate = getDate(dateSTR);
+		return updateDate;
+	}
+	
+	private Date getDate(String dateSTR)
+	{
+		String[] dateComponents = dateSTR.split("-");
+		Date date = new Date(new GregorianCalendar(Integer.valueOf(dateComponents[0]), Integer.valueOf(dateComponents[1]) - 1, Integer.valueOf(dateComponents[2])).getTimeInMillis());
+		return date;
+	}
 	
 //	public static void main(String[] args) throws UnirestException {
 //		ArrayList<Country> c = new ArrayList<>();

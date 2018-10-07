@@ -209,6 +209,23 @@ public class CountryPovertyDataDAO {
 		return years;
 	}
 	
+	public String readFirstYear() throws SQLException
+	{
+		String year = null;
+		Connection con = DriverManagerConnectionPool.getInstance().getConnection();
+		Statement stm = con.createStatement();
+		ResultSet rs = stm.executeQuery(READ_FIRST_YEAR);
+		if (rs.next())
+		{
+			year = rs.getString(1);
+		}
+		con.commit();
+		rs.close();
+		stm.close();
+		DriverManagerConnectionPool.getInstance().releaseConnection(con);
+		return year;
+	}
+	
 	public void delete(String source) throws SQLException
 	{
 		Connection con = DriverManagerConnectionPool.getInstance().getConnection();
@@ -220,10 +237,10 @@ public class CountryPovertyDataDAO {
 		DriverManagerConnectionPool.getInstance().releaseConnection(con);
 	}
 	
-//	public static void main(String[] args) throws SQLException {
-//		CountryPovertyDataDAO dao = new CountryPovertyDataDAO();
-//		System.out.println(dao.readAvailableYearsFrom("1995"));
-//	}
+	public static void main(String[] args) throws SQLException {
+		CountryPovertyDataDAO dao = new CountryPovertyDataDAO();
+		System.out.println(dao.readFirstYear());
+	}
 	
 //	private static final Logger LOGGER = Logger.getLogger(PovertyData.DATA_TYPE);
 	private static final Logger LOGGER = Logger.getLogger("updating");
@@ -238,5 +255,6 @@ public class CountryPovertyDataDAO {
 	private static final String READ_BY_REGION_AND_YEAR = "SELECT p.Country, p.Year, p.Value, p.Source FROM country c, countrypoverty p WHERE c.Region = ? AND p.Year = ? AND c.Code = p.Country";
 	private static final String READ_VALUE_BY_COUNTRY_AND_YEAR = "SELECT Value FROM countrypoverty WHERE Country = ? AND Year = ?";
 	private static final String READ_YEARS = "SELECT DISTINCT Year FROM countrypoverty WHERE Year >= ?";
+	private static final String READ_FIRST_YEAR = "SELECT min(Year) FROM countrypoverty";
 	private static final String DELETE = "DELETE FROM countrypoverty WHERE Source = ?";
 }

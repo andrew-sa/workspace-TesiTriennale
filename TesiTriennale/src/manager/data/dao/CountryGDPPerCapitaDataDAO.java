@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
@@ -128,6 +129,23 @@ public class CountryGDPPerCapitaDataDAO {
 			throw new TupleNotFoundException();
 		}
 	}
+	
+	public String readFirstYear() throws SQLException
+	{
+		String year = null;
+		Connection con = DriverManagerConnectionPool.getInstance().getConnection();
+		Statement stm = con.createStatement();
+		ResultSet rs = stm.executeQuery(READ_FIRST_YEAR);
+		if (rs.next())
+		{
+			year = rs.getString(1);
+		}
+		con.commit();
+		rs.close();
+		stm.close();
+		DriverManagerConnectionPool.getInstance().releaseConnection(con);
+		return year;
+	}
 
 	public void delete(String source) throws SQLException
 	{
@@ -147,6 +165,7 @@ public class CountryGDPPerCapitaDataDAO {
 	private static final String READ_REAL = "SELECT * FROM countrygdppercapita WHERE Country = ? AND Calculated = false";
 	private static final String READ_BY_REGION = "SELECT cgdp.Country, cgdp.Year, cgdp.Value FROM country c, countrygdppercapita cgdp WHERE c.Code = cgdp.Country AND c.Region = ?";
 	private static final String READ_VALUE_BY_COUNTRY_AND_YEAR = "SELECT Value FROM countrygdppercapita WHERE Country = ? AND Year = ?";
+	private static final String READ_FIRST_YEAR = "SELECT min(Year) FROM countrygdppercapita";
 	private static final String DELETE = "DELETE FROM countrygdppercapita WHERE Source = ?";
 
 }

@@ -18,7 +18,6 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 
 import manager.data.dao.SourceDAO;
 import manager.data.extraction.EUDataWrapper;
-import manager.data.extraction.LastUpdateDateWrapper;
 import manager.data.extraction.USADataWrapper;
 import manager.data.extraction.WorldBankDataWrapper;
 import manager.data.model.Source;
@@ -43,29 +42,51 @@ public class LoadAdminActions extends HttpServlet {
 		response.setContentType("text/html");
 		String password = request.getParameter("password");
 //		String password = "tesi";
-		JSONArray array = new JSONArray();
+		JSONArray result = new JSONArray();
 		if (replaceIfMissing(password, REPLACEMENT).equals(password) && password.equals(PASSWORD))
 		{
 			try
 			{
 				SourceDAO sourceDAO = new SourceDAO();
+				
+				ArrayList<String> names = sourceDAO.readNames();
+				JSONArray namesArray = new JSONArray();
+				for (int i = 0; i < names.size(); i++)
+				{
+					namesArray.put(names.get(i));
+				}
+				result.put(namesArray);
+				
+				ArrayList<String> dataTypes = sourceDAO.readDataTypes();
+				JSONArray dataTypesArray = new JSONArray();
+				for (int i = 0; i < dataTypes.size(); i++)
+				{
+					dataTypesArray.put(dataTypes.get(i));
+				}
+				result.put(dataTypesArray);
+				
 				ArrayList<Source> sources = sourceDAO.read();
-				LastUpdateDateWrapper wrapper = new LastUpdateDateWrapper();
+				USADataWrapper usaWrapper = new USADataWrapper();
+				EUDataWrapper euWrapper = new EUDataWrapper();
+				WorldBankDataWrapper worldBankWrapper = new WorldBankDataWrapper();
+				
+				JSONArray array = new JSONArray();
 				for (Source s: sources)
 				{
 					JSONObject sourceOBJ = new JSONObject();
 					sourceOBJ.put("name", s.getName());
+					sourceOBJ.put("dataType", s.getDataType());
 					Date updateDate = null;
 					switch (s.getName())
 					{
 						case USADataWrapper.SOURCE:
-							updateDate = wrapper.lastUpdateDateUSA();
+							updateDate = usaWrapper.lastUpdateDate(s.getDataType());
 							break;
 						case EUDataWrapper.SOURCE:
-							updateDate = wrapper.lastUpdateDateEU();
+							updateDate = euWrapper.lastUpdateDate(s.getDataType());
 							break;
 						case WorldBankDataWrapper.SOURCE:
-							updateDate = wrapper.lastUpdateDateWorldBank();
+							updateDate = worldBankWrapper.lastUpdateDate(s.getDataType());
 							break;
 						default:
 							break;
@@ -80,6 +101,7 @@ public class LoadAdminActions extends HttpServlet {
 					}
 					array.put(sourceOBJ);
 				}
+				result.put(array);
 			}
 			catch (SQLException e)
 			{
@@ -90,8 +112,8 @@ public class LoadAdminActions extends HttpServlet {
 				e.printStackTrace();
 			}
 		}
-		response.getWriter().write(array.toString());
-//		System.out.println(array.toString());
+		response.getWriter().write(result.toString());
+//		System.out.println(result.toString());
 	}
 
 	public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
@@ -108,7 +130,7 @@ public class LoadAdminActions extends HttpServlet {
 	}
 	
 //	public static void main(String[] args) throws ServletException, IOException {
-//		(new AdminActions()).doGet(null, null);
+//		(new LoadAdminActions()).doGet(null, null);
 //	}
 
 	private static final String PASSWORD = "tesi";

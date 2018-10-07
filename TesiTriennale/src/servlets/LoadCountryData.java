@@ -15,21 +15,25 @@ import org.json.JSONObject;
 
 import exceptions.TupleNotFoundException;
 import manager.data.dao.CountryDAO;
+import manager.data.dao.CountryGDPPerCapitaDataDAO;
+import manager.data.dao.CountryNetMigrationDataDAO;
 import manager.data.dao.CountryPovertyDataDAO;
 import manager.data.model.Country;
+import manager.data.model.CountryGDPPerCapitaData;
+import manager.data.model.CountryNetMigrationData;
 import manager.data.model.CountryPovertyData;
 
 /**
  * Servlet implementation class LoadCountriesData
  */
-@WebServlet("/load_country_poverty_data")
-public class LoadCountryPovertyData extends HttpServlet {
+@WebServlet("/load_country_data")
+public class LoadCountryData extends HttpServlet {
 	private static final long serialVersionUID = 1L;
        
     /**
      * @see HttpServlet#HttpServlet()
      */
-    public LoadCountryPovertyData() {
+    public LoadCountryData() {
         super();
         // TODO Auto-generated constructor stub
     }
@@ -63,7 +67,7 @@ public class LoadCountryPovertyData extends HttpServlet {
 //		}
 		String code = request.getParameter("code");
 		String name = request.getParameter("name");
-		if (!replaceIfMissing(code, REPLACEMENT).equals(REPLACEMENT)/* && !replaceIfMissing(name, REPLACEMENT).equals(REPLACEMENT)*/)
+		if (!replaceIfMissing(code, REPLACEMENT).equals(REPLACEMENT))
 		{
 			try
 			{
@@ -77,8 +81,12 @@ public class LoadCountryPovertyData extends HttpServlet {
 				{
 					country = new Country(code, name);
 				}
+				
 				JSONObject result = new JSONObject();
-				JSONArray array = new JSONArray();
+				JSONArray poverty = new JSONArray();
+				JSONArray netmigration = new JSONArray();
+				JSONArray gdppercapita = new JSONArray();
+				
 				CountryPovertyDataDAO povertyDataDAO = new CountryPovertyDataDAO();
 				ArrayList<CountryPovertyData> povertyData = povertyDataDAO.readRealValuesOfTheCountry(country);
 				for (CountryPovertyData pd: povertyData)
@@ -86,10 +94,33 @@ public class LoadCountryPovertyData extends HttpServlet {
 					JSONObject data = new JSONObject();
 					data.put("year", pd.getYear());
 					data.put("value", pd.getValue());
-					array.put(data);
+					poverty.put(data);
 				}
+				
+				CountryNetMigrationDataDAO netMigrationDataDAO = new CountryNetMigrationDataDAO();
+				ArrayList<CountryNetMigrationData> netMigrationData = netMigrationDataDAO.read(country);
+				for (CountryNetMigrationData nmd: netMigrationData)
+				{
+					JSONObject data = new JSONObject();
+					data.put("year", nmd.getYear());
+					data.put("value", nmd.getValue());
+					netmigration.put(data);
+				}
+				
+				CountryGDPPerCapitaDataDAO gdpPerCapitaDataDAO = new CountryGDPPerCapitaDataDAO();
+				ArrayList<CountryGDPPerCapitaData> gdpPerCapitaData = gdpPerCapitaDataDAO.read(country);
+				for (CountryGDPPerCapitaData gdp: gdpPerCapitaData)
+				{
+					JSONObject data = new JSONObject();
+					data.put("year", gdp.getYear());
+					data.put("value", gdp.getValue());
+					gdppercapita.put(data);
+				}
+				
 				result.put("name", country.getName());
-				result.put("data", array);
+				result.put("poverty", poverty);
+				result.put("netmigration", netmigration);
+				result.put("gdppercapita", gdppercapita);
 				response.getWriter().write(result.toString());
 			}
 			catch (SQLException e)

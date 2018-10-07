@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
@@ -82,6 +83,23 @@ public class CountryNetMigrationDataDAO {
 		DriverManagerConnectionPool.getInstance().releaseConnection(con);
 		return data;
 	}
+	
+	public String readFirstYear() throws SQLException
+	{
+		String year = null;
+		Connection con = DriverManagerConnectionPool.getInstance().getConnection();
+		Statement stm = con.createStatement();
+		ResultSet rs = stm.executeQuery(READ_FIRST_YEAR);
+		if (rs.next())
+		{
+			year = rs.getString(1);
+		}
+		con.commit();
+		rs.close();
+		stm.close();
+		DriverManagerConnectionPool.getInstance().releaseConnection(con);
+		return year;
+	}
 
 	public void delete(String source) throws SQLException
 	{
@@ -99,6 +117,7 @@ public class CountryNetMigrationDataDAO {
 	private static final String CREATE = "INSERT INTO countrynetmigration VALUES (?, ?, ?, ?)";
 	private static final String READ = "SELECT * FROM countrynetmigration WHERE Country = ?";
 	private static final String READ_BY_REGION = "SELECT cnt.Country, cnt.Year, cnt.Value FROM country c, countrynetmigration cnt WHERE c.Code = cnt.Country AND c.Region = ?";
+	private static final String READ_FIRST_YEAR = "SELECT min(Year) FROM countrynetmigration";
 	private static final String DELETE = "DELETE FROM countrynetmigration WHERE Source = ?";
 	
 }

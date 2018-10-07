@@ -54,7 +54,7 @@ public class LoadAnimatedChartData extends HttpServlet {
 			CountryGDPPerCapitaDataDAO gdpPerCapitaDAO = new CountryGDPPerCapitaDataDAO();
 			
 			ArrayList<String> years = povertyDataDAO.readAvailableYearsFrom(FIRST_YEAR);
-			ArrayList<Country> countries = countryDAO.readAllAvailableForPovertyData();
+			ArrayList<Country> countries = countryDAO.readAllAvailableForAnimatedChart(FIRST_YEAR);
 			
 			JSONObject result = new JSONObject();
 			JSONObject boundaries = new JSONObject();

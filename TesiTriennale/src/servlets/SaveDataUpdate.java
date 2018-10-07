@@ -16,7 +16,14 @@ import manager.data.dao.SourceDAO;
 import manager.data.extraction.EUDataWrapper;
 import manager.data.extraction.USADataWrapper;
 import manager.data.extraction.WorldBankDataWrapper;
+import manager.data.loading.LoadGDPPerCapitaData;
+import manager.data.loading.LoadNetMigrationsData;
+import manager.data.loading.LoadPopulationData;
 import manager.data.loading.LoadPovertyData;
+import manager.data.model.GDPPerCapitaData;
+import manager.data.model.NetMigrationData;
+import manager.data.model.PopulationData;
+import manager.data.model.PovertyData;
 import manager.data.model.Source;
 
 /**
@@ -44,35 +51,75 @@ public class SaveDataUpdate extends HttpServlet {
 		{
 			SourceDAO sourceDAO = new SourceDAO();
 			ArrayList<Source> sources = sourceDAO.read();
+			LoadPopulationData loadPopulationData = new LoadPopulationData();
 			LoadPovertyData loadPovertyData = new LoadPovertyData();
+			LoadNetMigrationsData loadNetMigrationData = new LoadNetMigrationsData();
+			LoadGDPPerCapitaData loadGDPPerCapitaData = new LoadGDPPerCapitaData();
 			boolean updateExecuted = false;
 			for (Source s: sources)
 			{
-				String updated = request.getParameter(s.getName());
+				String updated = request.getParameter(s.getName() + s.getDataType());
 				if (replaceIfMissing(updated, REPLACEMENT).equals(updated))
 				{
 //					System.out.println(updated);
 					if (updated.equals(TO_UPDATE))
 					{
+						System.out.println("Updating: " + s.toString());
 						switch (s.getName())
 						{
 							case USADataWrapper.SOURCE:
 							{
-								loadPovertyData.loadUSAData();
+								switch (s.getDataType())
+								{
+									case PopulationData.DATA_TYPE:
+										loadPopulationData.loadUSAData();
+										break;
+									case PovertyData.DATA_TYPE:
+										loadPovertyData.loadUSAData();
+										break;
+									default:
+										break;
+								}
 								sourceDAO.update(s);
 								updateExecuted = true;
 								break;
 							}
 							case EUDataWrapper.SOURCE:
 							{
-								loadPovertyData.loadEUData();
+								switch (s.getDataType())
+								{
+									case PopulationData.DATA_TYPE:
+										loadPopulationData.loadEUData();;
+										break;
+									case PovertyData.DATA_TYPE:
+										loadPovertyData.loadEUData();
+										break;
+									case NetMigrationData.DATA_TYPE:
+										loadNetMigrationData.loadEUData();
+									default:
+										break;
+								}
 								sourceDAO.update(s);
 								updateExecuted = true;
 								break;
 							}
 							case WorldBankDataWrapper.SOURCE:
 							{
-								loadPovertyData.loadWorldBankData();
+								switch (s.getDataType())
+								{
+									case PopulationData.DATA_TYPE:
+										loadPopulationData.loadWorldBankData();;
+										break;
+									case PovertyData.DATA_TYPE:
+										loadPovertyData.loadWorldBankData();
+										break;
+									case NetMigrationData.DATA_TYPE:
+										loadNetMigrationData.loadWorldBankData();
+									case GDPPerCapitaData.DATA_TYPE:
+										loadGDPPerCapitaData.loadWorldBankData();
+									default:
+										break;
+								}
 								sourceDAO.update(s);
 								updateExecuted = true;
 								break;

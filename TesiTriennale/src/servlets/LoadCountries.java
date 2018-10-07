@@ -41,7 +41,7 @@ public class LoadCountries extends HttpServlet {
 		{
 			CountryDAO countryDAO = new CountryDAO();
 			ArrayList<String> regions = countryDAO.readRegions();
-			ArrayList<Country> countries = countryDAO.readAllAvailableForPovertyData();
+			ArrayList<Country> countries = countryDAO.readAllAvailableForAnalysisChart();
 			System.out.println(countries.size());
 			JSONArray regionsArray = new JSONArray();
 			for (String r: regions)

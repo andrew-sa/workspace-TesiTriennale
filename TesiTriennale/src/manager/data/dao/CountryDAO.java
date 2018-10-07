@@ -73,12 +73,12 @@ public class CountryDAO {
 		}
 	}
 	
-	public ArrayList<Country> readAllAvailableForPovertyData() throws SQLException
+	public ArrayList<Country> readAllAvailableForAnalysisChart() throws SQLException
 	{
 		ArrayList<Country> countries = new ArrayList<>();
 		Connection con = DriverManagerConnectionPool.getInstance().getConnection();
 		Statement stm = con.createStatement();
-		ResultSet rs = stm.executeQuery(READ_ALL);
+		ResultSet rs = stm.executeQuery(READ_ALL_FOR_ANALYSIS_CHART);
 		while (rs.next())
 		{
 			Country country = new Country(rs.getString(1), rs.getString(2), rs.getString(3));
@@ -222,14 +222,16 @@ public class CountryDAO {
 //	}
 	
 //	public static void main(String[] args) throws SQLException {
-//		(new CountryDAO()).readCountryForWorldBankOfADataType("test");
+//		System.out.println((new CountryDAO()).readAllAvailableForAnalysisChart());
+//		System.out.println((new CountryDAO()).readAllAvailableForAnalysisChart().size());
 //	}
 
 	private static final String CREATE = "INSERT INTO country VALUES (?, ?, ?)";
 	private static final String READ = "SELECT * FROM country WHERE Code = ?";
-	private static final String READ_ALL = "SELECT DISTINCT c.code, c.name, c.region FROM country c, countrypoverty p WHERE c.Code = p.Country";
-	private static final String READ_ALL_FOR_ANIMATED_CHART = "SELECT DISTINCT c.code, c.name, c.region FROM country c, countrypoverty p WHERE c.Code = p.Country AND p.Year >= ?";
-	private static final String READ_REGIONS = "SELECT DISTINCT c.region FROM country c, countrypoverty p WHERE c.Code = p.Country";
+//	private static final String READ_ALL = "SELECT DISTINCT c.Ccode, c.Name, c.Region FROM country c, countrypoverty p WHERE c.Code = p.Country";
+	private static final String READ_ALL_FOR_ANALYSIS_CHART = "SELECT c.Code, c.Name, c.Region FROM country c WHERE c.Code IN (SELECT DISTINCT Country FROM countrypopulation) OR c.Code IN (SELECT DISTINCT Country FROM countrynetmigration) OR c.Code IN (SELECT DISTINCT Country FROM countrygdppercapita)";
+	private static final String READ_ALL_FOR_ANIMATED_CHART = "SELECT DISTINCT c.Code, c.Name, c.Region FROM country c, countrypoverty p WHERE c.Code = p.Country AND p.Year >= ?";
+	private static final String READ_REGIONS = "SELECT DISTINCT c.Region FROM country c, countrypoverty p WHERE c.Code = p.Country";
 	private static final String READ_COUNTRY_FOR_WORLD_BANK_POPULATION_DATA = "SELECT * FROM country WHERE Code NOT IN (SELECT DISTINCT Country FROM countrypopulation WHERE Source != ?)";
 	private static final String READ_COUNTRY_FOR_WORLD_BANK_POVERTY_DATA = "SELECT * FROM country WHERE Code NOT IN (SELECT DISTINCT Country FROM countrypoverty WHERE Source != ?)";
 	private static final String READ_COUNTRY_FOR_WORLD_BANK_NET_MIGRATION_DATA = "SELECT * FROM country WHERE Code NOT IN (SELECT DISTINCT Country FROM countrynetmigration WHERE Source != ?)";

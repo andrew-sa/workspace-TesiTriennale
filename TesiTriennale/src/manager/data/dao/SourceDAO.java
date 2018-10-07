@@ -34,6 +34,38 @@ public class SourceDAO {
 		return sources;
 	}
 	
+	public ArrayList<String> readNames() throws SQLException
+	{
+		ArrayList<String> names = new ArrayList<>();
+		Connection con = DriverManagerConnectionPool.getInstance().getConnection();
+		Statement stm = con.createStatement();
+		ResultSet rs = stm.executeQuery(READ_NAMES);
+		while (rs.next())
+		{
+			names.add(rs.getString(1));
+		}
+		con.commit();
+		rs.close();
+		DriverManagerConnectionPool.getInstance().releaseConnection(con);
+		return names;
+	}
+	
+	public ArrayList<String> readDataTypes() throws SQLException
+	{
+		ArrayList<String> dataTypes = new ArrayList<>();
+		Connection con = DriverManagerConnectionPool.getInstance().getConnection();
+		Statement stm = con.createStatement();
+		ResultSet rs = stm.executeQuery(READ_DATA_TYPES);
+		while (rs.next())
+		{
+			dataTypes.add(rs.getString(1));
+		}
+		con.commit();
+		rs.close();
+		DriverManagerConnectionPool.getInstance().releaseConnection(con);
+		return dataTypes;
+	}
+	
 	public void update(Source source) throws SQLException
 	{
 		Connection con = DriverManagerConnectionPool.getInstance().getConnection();
@@ -65,6 +97,8 @@ public class SourceDAO {
 //	}
 	
 	private static final String READ = "SELECT * FROM source";
+	private static final String READ_NAMES = "SELECT DISTINCT Name FROM source";
+	private static final String READ_DATA_TYPES = "SELECT DISTINCT DataType FROM source";
 	private static final String UPDATE = "UPDATE source SET LastUpdate = ? WHERE Name = ? AND DataType = ?";
 
 }

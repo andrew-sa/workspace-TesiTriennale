@@ -3,27 +3,70 @@ var xhttp;
 function SourceTable()
 {
 	this.table = $('<table id="source-tb"><tbody></tbody></table>');
-	this.table.append('<tr><th>Source</th><th>Updated</th></tr>');
-	this.addSource = function(name, updated)
+	this.numDataTypes = 0;
+	this.dataTypesSource = null;
+	this.addDataTypes = function(dataTypes)
 	{
-		var row = $('<tr></tr>');
+		this.numDataTypes = dataTypes.length;
+		var dataTypesSTR = '<th>SOURCE</th>';
+		this.dataTypesSource = '';
+		for (var i = 0; i < dataTypes.length; i++)
+		{
+			dataTypesSTR = dataTypesSTR.concat('<th name="' + dataTypes[i] + '">' + dataTypes[i] + '</th>');
+			this.dataTypesSource = this.dataTypesSource.concat('<td name="' + dataTypes[i] + '"></td>');
+		}
+		this.table.append('<tr>' + dataTypesSTR + '</tr>');
+	}
+	this.addNames = function(names)
+	{
+//		var cells = '';
+//		for (var i = 0; i < this.numDataTypes; i++)
+//		{
+//			cells = cells.concat('<td></td>')
+//		}
+		for (var i = 0; i < names.length; i++)
+		{
+			this.table.append('<tr id="' + names[i] + '"><td>' + names[i] + '</td>' + this.dataTypesSource + '</tr>');
+		}
+	}
+	this.addSource = function(name, dataType, updated)
+	{
+		console.log(this.table);
+		var row = this.table.children('tbody').children('#'.concat(name));
 		var btn = $('<button class="source-btn" type="button"></button>');
 		btn.attr('name', name);
+		btn.attr('title', dataType);
 		btn.attr('value', updated);
-		btn.text(name);
-		var state = $('<td></td>');
 		if (updated)
 		{
-			state.html('<i class="fas fa-check fa-3x"></i>');
+			btn.html('<i class="fas fa-check fa-3x"></i>');
 		}
 		else
 		{
-			state.html('<i class="fas fa-times fa-3x"></i>');
+			btn.html('<i class="fas fa-times fa-3x"></i>');
 		}
-		row.append($('<td></td>.').append(btn));
-		row.append(state);
-		this.table.append(row);
+		row.children('td[name="' + dataType + '"]').append(btn);
 	}
+//	this.addSource = function(name, dataType, updated)
+//	{
+//		var row = $('#' + name);
+//		var btn = $('<button class="source-btn" type="button"></button>');
+//		btn.attr('name', name);
+//		btn.attr('value', updated);
+//		btn.text(name);
+//		var state = $('<td></td>');
+//		if (updated)
+//		{
+//			state.html('<i class="fas fa-check fa-3x"></i>');
+//		}
+//		else
+//		{
+//			state.html('<i class="fas fa-times fa-3x"></i>');
+//		}
+//		row.append($('<td></td>').append(btn));
+//		row.append(state);
+//		this.table.append(row);
+//	}
 }
 
 function showModalUpdate()
@@ -79,7 +122,7 @@ function checkUpdate(form)
 		{
 			queryString += '&'
 		}
-		queryString += sources[i].name + '=' + sources[i].value;
+		queryString += sources[i].name + sources[i].title + '=' + sources[i].value;
 	}
 //	console.log(queryString);
 	document.body.style.cursor = "wait";
@@ -101,19 +144,27 @@ function showAction()
 		if (responseARRAY.length == 0)
 		{
 			$('#password-form > .container').prepend('<div class="error-msg msg">WRONG PASSWORD</div>');
+			document.body.style.cursor = "auto";
+			document.getElementById('psw-btn').style.cursor = "pointer";
 		}
 		else
 		{
-			var updatesAvailable = false;
+			var names = responseARRAY[0];
+			var dataTypes = responseARRAY[1];
+			var sources = responseARRAY[2];
+			
 			var sourceTable = new SourceTable();
-			for (var i = 0; i < responseARRAY.length; i++)
+			sourceTable.addDataTypes(dataTypes);
+			sourceTable.addNames(names);
+			var updatesAvailable = false;
+			for (var i = 0; i < sources.length; i++)
 			{
-				if (!responseARRAY[i].updated)
+				if (!sources[i].updated)
 				{
 					updatesAvailable = true;
 					
 				}
-				sourceTable.addSource(responseARRAY[i].name, responseARRAY[i].updated);
+				sourceTable.addSource(sources[i].name, sources[i].dataType, sources[i].updated);
 			}
 			if (updatesAvailable)
 			{
@@ -128,9 +179,10 @@ function showAction()
 			$('#update-form > .container').prepend(sourceTable.table);
 			$('#password-form').hide();
 			$('#update-form').show();
+			
+			document.body.style.cursor = "auto";
+			document.getElementById('psw-btn').style.cursor = "auto";
 		}
-		document.body.style.cursor = "auto";
-		document.getElementById('psw-btn').style.cursor = "auto";
 	}
 }
 

@@ -1,5 +1,6 @@
 package manager.data.extraction;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -7,6 +8,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -94,6 +96,52 @@ public class USADataWrapper {
 //	public static void main(String[] args) throws UnirestException {
 //		System.out.println((new USADataWrapper()).extractPopulationData());
 //	}
+	
+	public Date lastUpdateDate(String dataType) throws UnirestException
+	{
+		switch (dataType)
+		{
+			case PopulationData.DATA_TYPE:
+				return populationLastUpdateDate();
+			case PovertyData.DATA_TYPE:
+				return povertyLastUpdateDate();
+			default:
+				return null;
+		}
+	}
+	
+	public Date populationLastUpdateDate() throws UnirestException
+	{
+		final String restAPI = "https://api.census.gov/";
+		final String datasets = "data/timeseries/idb/5year";
+		HttpRequest req = Unirest.get(restAPI + datasets);
+		JSONObject result = req.asJson().getBody().getObject();
+		String dateSTR = ((JSONObject) ((JSONArray) result.get("dataset")).get(0)).getString("modified");
+		Date updateDate = getDate(dateSTR);
+		return updateDate;
+	}
+	
+	public Date povertyLastUpdateDate() throws UnirestException
+	{
+		final String restAPI = "https://api.census.gov/";
+		final String datasets = "data/timeseries/poverty/histpov2";
+		HttpRequest req = Unirest.get(restAPI + datasets);
+		JSONObject result = req.asJson().getBody().getObject();
+		String dateSTR = ((JSONObject) ((JSONArray) result.get("dataset")).get(0)).getString("modified");
+		Date updateDate = getDate(dateSTR);
+//		Date currentDate = getCurrentDate(); 
+//		System.out.println(updateDate);
+//		System.out.println(currentDate);
+//		System.out.println(updateDate.after(currentDate));
+		return updateDate;
+	}
+	
+	private Date getDate(String dateSTR)
+	{
+		String[] dateComponents = dateSTR.split("-");
+		Date date = new Date(new GregorianCalendar(Integer.valueOf(dateComponents[0]), Integer.valueOf(dateComponents[1]) - 1, Integer.valueOf(dateComponents[2])).getTimeInMillis());
+		return date;
+	}
 	
 	private static final Logger LOGGER = Logger.getLogger("updating");
 	

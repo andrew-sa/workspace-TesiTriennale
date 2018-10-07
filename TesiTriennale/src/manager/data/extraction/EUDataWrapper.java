@@ -1,6 +1,8 @@
 package manager.data.extraction;
 
+import java.sql.Date;
 import java.util.ArrayList;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -332,6 +334,111 @@ public class EUDataWrapper {
 //			System.out.println();
 		}
 		return data;
+	}
+	
+	public Date lastUpdateDate(String dataType) throws UnirestException
+	{
+		switch (dataType)
+		{
+			case PopulationData.DATA_TYPE:
+				return populationLastUpdateDate();
+			case PovertyData.DATA_TYPE:
+				return povertyLastUpdateDate();
+			case NetMigrationData.DATA_TYPE:
+				return netMigrationLastUpdateDate();
+			default:
+				return null;
+		}
+	}
+	
+	public Date populationLastUpdateDate() throws UnirestException
+	{
+		final String restAPI = "http://ec.europa.eu/eurostat/wdds/rest/data/v2.1/json/en/";
+		final String dataset = "demo_pjan";
+		Map<String, Object> fields = new HashMap<>();
+		fields.put("unit", "NR");
+	    fields.put("sex", "T");
+	    fields.put("age", "TOTAL");
+	    fields.put("filterNonGeo", 1);
+		HttpRequest req = Unirest.get(restAPI + dataset).queryString(fields);
+		JSONObject result = req.asJson().getBody().getObject();
+		String dateSTR = result.getString("updated");
+		Date updateDate = getDate(dateSTR);
+		return updateDate;
+	}
+	
+	public Date povertyLastUpdateDate() throws UnirestException
+	{
+		final String restAPI = "http://ec.europa.eu/eurostat/wdds/rest/data/v2.1/json/en/";
+		final String dataset = "ilc_li02";
+		Map<String, Object> fields = new HashMap<>();
+		fields.put("INDIC_IL", "LI_R_MD50");
+	    fields.put("sex", "T");
+	    fields.put("precision", 1);
+	    fields.put("sinceTimePeriod", 2000);
+	    fields.put("unit", "PC");
+	    fields.put("age", "TOTAL");
+	    fields.put("filterNonGeo", 1);
+	    fields.put("shortLabel", 1);
+	    fields.put("unitLabel", "code");
+		HttpRequest req = Unirest.get(restAPI + dataset).queryString(fields);
+		JSONObject result = req.asJson().getBody().getObject();
+		String dateSTR = result.getString("updated");
+		Date updateDate = getDate(dateSTR);
+		return updateDate;
+	}
+	
+	public Date netMigrationLastUpdateDate() throws UnirestException
+	{
+		Date immigration = immigrationLastUpdateDate();
+		Date emigration = emigrationLastUpdateDate();
+		if (immigration.after(emigration))
+		{
+			return immigration;
+		}
+		else
+		{
+			return emigration;
+		}
+	}
+	
+	private Date immigrationLastUpdateDate() throws UnirestException
+	{
+		final String restAPI = "http://ec.europa.eu/eurostat/wdds/rest/data/v2.1/json/en/";
+		final String dataset = "migr_imm8";
+		Map<String, Object> fields = new HashMap<>();
+		fields.put("unit", "NR");
+	    fields.put("sex", "T");
+	    fields.put("age", "TOTAL");
+	    fields.put("agedef", "REACH");
+		HttpRequest req = Unirest.get(restAPI + dataset).queryString(fields);
+		JSONObject result = req.asJson().getBody().getObject();
+		String dateSTR = result.getString("updated");
+		Date updateDate = getDate(dateSTR);
+		return updateDate;
+	}
+	
+	private Date emigrationLastUpdateDate() throws UnirestException
+	{
+		final String restAPI = "http://ec.europa.eu/eurostat/wdds/rest/data/v2.1/json/en/";
+		final String dataset = "migr_emi2";
+		Map<String, Object> fields = new HashMap<>();
+		fields.put("unit", "NR");
+	    fields.put("sex", "T");
+	    fields.put("age", "TOTAL");
+	    fields.put("agedef", "REACH");
+		HttpRequest req = Unirest.get(restAPI + dataset).queryString(fields);
+		JSONObject result = req.asJson().getBody().getObject();
+		String dateSTR = result.getString("updated");
+		Date updateDate = getDate(dateSTR);
+		return updateDate;
+	}
+	
+	private Date getDate(String dateSTR)
+	{
+		String[] dateComponents = dateSTR.split("-");
+		Date date = new Date(new GregorianCalendar(Integer.valueOf(dateComponents[0]), Integer.valueOf(dateComponents[1]) - 1, Integer.valueOf(dateComponents[2])).getTimeInMillis());
+		return date;
 	}
 	
 //	public static void main(String[] args) throws UnirestException {

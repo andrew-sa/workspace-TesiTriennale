@@ -179,7 +179,7 @@
     margin-left: 5px;
 }
 
-#checkbox-container .active:after
+#checkbox-container button.active:after
 {
     content: "\2212";
 }
@@ -191,6 +191,27 @@
     overflow: hidden;
     transition: max-height 0.2s ease-out;
     background-color: #f1f1f1;
+}
+
+#checkbox-container .wrapper-ragion-checkbox
+{
+	display: flex;
+	background-color: #777;
+}
+
+#checkbox-container .active, #heckbox-container .collapsible:hover
+{
+    background-color: #4CAF50;
+}
+
+#checkbox-container .region-checkbox
+{
+	cursor: pointer;
+	-ms-transform: scale(1.4); /* IE */
+	-moz-transform: scale(1.4); /* FF */
+	-webkit-transform: scale(1.4); /* Safari and Chrome */
+	-o-transform: scale(1.4); /* Opera */
+	width: 2em;
 }
 
 /* COUNTRY SEARCH */
@@ -296,4 +317,25 @@
 .openbtn:hover
 {
 	background-color: #444;
+}
+
+/* SIDEBAR */
+#chart-options-panel > .header-panel
+{
+	cursor: auto !important;
+}
+
+#countries-selector-panel > .header-panel
+{
+	cursor: auto;
+}
+
+#content .panel .container .checkmark:after
+{
+ 	top: 0.32em;
+	left: 0.29em;
+	width: 0.6em;
+	height: 0.5em;
+	border-radius: 50%;
+	background: white;
 }
