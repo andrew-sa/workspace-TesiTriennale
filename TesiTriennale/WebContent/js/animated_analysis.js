@@ -12,11 +12,25 @@ var animatedChart = new AnimatedBubbleChart();
 var selectedCountries = [];
 //var animatedChartUser = new AnimatedBubbleChart();
 
+function isJSONString(str)
+{
+	var regexJSONObject = /^\{.*\}$/;
+	var regexJSONArray = /^\[.*\]$/;
+	if (str.match(regexJSONObject) || str.match(regexJSONArray))
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 /* CHECKBOXS COUNTRIES*/
 function CheckBox(countryCode, countryName)
 {
 	this.container = $('<label class="container"></label>');
-	this.input = $('<input type="checkbox" onchange="checkBoxCountryHandler(this)">');
+	this.input = $('<input class="country-checkbox" type="checkbox" onchange="checkBoxCountryHandler(this)">');
 	this.span = $('<span class="checkmark"></span>');
 	this.container.html(countryName);
 	this.input.attr("name", countryName);
@@ -25,32 +39,44 @@ function CheckBox(countryCode, countryName)
 	this.container.append(this.span);
 }
 
+function RegionCheckBox(regionName)
+{
+	this.input = $('<input class="region-checkbox" type="checkbox" onchange="checkBoxRegionHandler(this)">');
+	this.input.attr("value", regionName);
+}
+
 function addCollapsibleListener()
 {
 	var coll = document.getElementsByClassName("collapsible");
 	for (var i = 0; i < coll.length; i++)
 	{
 		coll[i].addEventListener("click", function() {
-	    this.classList.toggle("active");
-	    var content = this.nextElementSibling;
-	    if (content.style.maxHeight)
-	    {
-	    	content.style.maxHeight = null;
-	    }
-	    else
-	    {
-	    	content.style.maxHeight = content.scrollHeight + "px";
-	    }
+			this.classList.toggle("active");
+			this.parentElement.classList.toggle("active");
+			var content = this.parentElement.nextElementSibling;
+			if (content.style.maxHeight)
+			{
+				content.style.maxHeight = null;
+			}
+			else
+			{
+				content.style.maxHeight = content.scrollHeight + "px";
+			}
 	   });
 	}
 }
 
 function CollapsibleRegion(regionName)
 {
+	this.checkbox = new RegionCheckBox(regionName);
+	this.title = $('<div class="wrapper-ragion-checkbox"></div>');
 	this.button = $('<button class="collapsible"></button>');
 	this.div = $('<div class="content"></div>');
 	this.button.html(regionName);
 	this.div.attr('id', regionName);
+	
+	this.title.append(this.checkbox.input);
+	this.title.append(this.button);
 	
 	this.region = regionName;
 }
@@ -62,39 +88,44 @@ function showCheckboxs()
 //		document.body.style.cursor = "auto";
 		
 		var resultSTR = xhttpCheckBoxs.responseText;
-		var resultJSON = JSON.parse(resultSTR);
-		var regions = resultJSON[0];
-		var countries = resultJSON[1];
-		for (var i = 0; i < regions.length; i++)
+		if (isJSONString(resultSTR))
 		{
-			var collapsibleRegion = new CollapsibleRegion(regions[i]);
-			$('#countries-selector-panel').append(collapsibleRegion.button);
-			$('#countries-selector-panel').append(collapsibleRegion.div);
-			arrayCollapsibleRegions.push(collapsibleRegion);
-		}
-		$('#countries-selector-panel').append('<hr>');
-		
-		for (var i = 0; i < countries.length; i++)
-		{
-			var checkBox = new CheckBox(countries[i].code, countries[i].name);
-			var copyCheckBox = new CheckBox(countries[i].code, countries[i].name);
-			var found = false;
-			var j = 0;
-			while (found == false && j < arrayCollapsibleRegions.length)
+			var resultJSON = JSON.parse(resultSTR);
+			var regions = resultJSON[0];
+			var countries = resultJSON[1];
+			for (var i = 0; i < regions.length; i++)
 			{
-				if (countries[i].region == arrayCollapsibleRegions[j].region)
-				{
-					arrayCollapsibleRegions[j].div.append(checkBox.container);
-					found = true;
-				}
-				j++
+				var collapsibleRegion = new CollapsibleRegion(regions[i]);
+	//			$('#countries-selector-panel').append(collapsibleRegion.button);
+				$('#countries-selector-panel').append(collapsibleRegion.title);
+				$('#countries-selector-panel').append(collapsibleRegion.div);
+	//			$('#countries-selector-panel').append(collapsibleRegion.div);
+				arrayCollapsibleRegions.push(collapsibleRegion);
 			}
-			arrayCheckBoxs.push(checkBox);
-			copyArrayCheckBoxs.push(copyCheckBox);
+			$('#countries-selector-panel').append('<hr>');
+			
+			for (var i = 0; i < countries.length; i++)
+			{
+				var checkBox = new CheckBox(countries[i].code, countries[i].name);
+				var copyCheckBox = new CheckBox(countries[i].code, countries[i].name);
+				var found = false;
+				var j = 0;
+				while (found == false && j < arrayCollapsibleRegions.length)
+				{
+					if (countries[i].region == arrayCollapsibleRegions[j].region)
+					{
+						arrayCollapsibleRegions[j].div.append(checkBox.container);
+						found = true;
+					}
+					j++
+				}
+				arrayCheckBoxs.push(checkBox);
+				copyArrayCheckBoxs.push(copyCheckBox);
+			}
+			
+			addCollapsibleListener();
+			$('input[type="checkbox"]').prop('disabled', true);
 		}
-		
-		addCollapsibleListener();
-		
 	}
 }
 
@@ -245,6 +276,7 @@ function ArrayData()
 
 function drawAnimatedChart()
 {
+	$('input[type="checkbox"]').prop('disabled', false);
 //	console.log("Array: " + animatedChart.arrayYearsData);
 	animatedChart.setCurrentTitle();
 	
@@ -306,71 +338,81 @@ function showAnimatedChart()
 //		document.body.style.cursor = "auto";
 		
 		var resultSTR = xhttpChart.responseText;
-		var resultJSON = JSON.parse(resultSTR);
-		console.log(resultJSON);
-		
-		var boundaries = resultJSON.boundaries;
-		var dataWrapper = resultJSON.data;
-		
-//		animatedChart = new AnimatedBubbleChart();
-		
-		animatedChart.options.hAxis.minValue = boundaries.gdppercapita.min;
-		animatedChart.options.hAxis.maxValue = boundaries.gdppercapita.max;
-		animatedChart.options.vAxis.minValue = boundaries.poverty.min;
-		animatedChart.options.vAxis.maxValue = boundaries.poverty.max;
-		animatedChart.options.sizeAxis.minValue = boundaries.population.min;
-		animatedChart.options.sizeAxis.maxValue = boundaries.population.max;
-		
-		animatedChart.options.hAxis.ticks = getAxisTicks(140, boundaries.gdppercapita.max, 20000);
-		animatedChart.options.vAxis.ticks = getAxisTicks(0, boundaries.poverty.max, 15);
-//		animatedChart.options.hAxis.ticks = getAxisTicks(500, boundaries.gdppercapita.max);
-//		animatedChart.options.vAxis.ticks = getAxisTicks(10, boundaries.poverty.max);
-		
-		for (var i = firstYear; i <= lastYear; i++)
+		if (isJSONString(resultSTR))
 		{
-			if (dataWrapper[i] != undefined)
+			var resultJSON = JSON.parse(resultSTR);
+			console.log(resultJSON);
+			
+			var boundaries = resultJSON.boundaries;
+			var dataWrapper = resultJSON.data;
+			
+	//		animatedChart = new AnimatedBubbleChart();
+			
+			animatedChart.options.hAxis.minValue = boundaries.gdppercapita.min;
+			animatedChart.options.hAxis.maxValue = boundaries.gdppercapita.max;
+			animatedChart.options.vAxis.minValue = boundaries.poverty.min;
+			animatedChart.options.vAxis.maxValue = boundaries.poverty.max;
+			animatedChart.options.sizeAxis.minValue = boundaries.population.min;
+			animatedChart.options.sizeAxis.maxValue = boundaries.population.max;
+			
+			animatedChart.options.hAxis.ticks = getAxisTicks(140, boundaries.gdppercapita.max, 20000);
+			animatedChart.options.vAxis.ticks = getAxisTicks(0, boundaries.poverty.max, 15);
+	//		animatedChart.options.hAxis.ticks = getAxisTicks(500, boundaries.gdppercapita.max);
+	//		animatedChart.options.vAxis.ticks = getAxisTicks(10, boundaries.poverty.max);
+			
+			for (var i = firstYear; i <= lastYear; i++)
 			{
-				var arrayData = new ArrayData();
-				arrayData.insertData(dataWrapper[i]);
-				animatedChart.addYearData(arrayData.data);
-				animatedChart.addYear(i);
+				if (dataWrapper[i] != undefined)
+				{
+					var arrayData = new ArrayData();
+					arrayData.insertData(dataWrapper[i]);
+					animatedChart.addYearData(arrayData.data);
+					animatedChart.addYear(i);
+				}
+				else
+				{
+					console.log(i);
+				}
 			}
-			else
+			
+			$('#yearsRange').attr('min', animatedChart.years[0]);
+			$('#yearsRange').attr('max', animatedChart.years[animatedChart.years.length - 1]);
+			$('#yearsRange').attr('value', animatedChart.getCurrentYear());
+			
+			for (var i = animatedChart.years[0]; i <= animatedChart.years[animatedChart.years.length - 1]; i++)
 			{
-				console.log(i);
+				$('#yearsLabel').append('<span onclick="showYear(this)">' + i + '</span>');
 			}
+			
+			document.getElementById('playButton').disabled = false;
+			document.getElementById('yearsRange').disabled = false;
+			
+			document.getElementById('toast').className = '';
+			
+			console.log(arrayData.data);
+	//		animatedChart.setData(arrayData.data);
+			
+			drawAnimatedChart();
 		}
-		
-		$('#yearsRange').attr('min', animatedChart.years[0]);
-		$('#yearsRange').attr('max', animatedChart.years[animatedChart.years.length - 1]);
-		$('#yearsRange').attr('value', animatedChart.getCurrentYear());
-		
-		for (var i = animatedChart.years[0]; i <= animatedChart.years[animatedChart.years.length - 1]; i++)
+		else
 		{
-			$('#yearsLabel').append('<span onclick="showYear(this)">' + i + '</span>');
+			$('input[type="checkbox"]').prop('disabled', false);
+			document.getElementById('toast').className = '';
 		}
-		
-		document.getElementById('playButton').disabled = false;
-		document.getElementById('yearsRange').disabled = false;
-		
-		document.getElementById('toast').className = '';
-		
-		console.log(arrayData.data);
-//		animatedChart.setData(arrayData.data);
-		
-		drawAnimatedChart();
+			
 	}
 }
 
 function loadAnimatedChart()
 {
 //	document.body.style.cursor = "wait";
+	
+	$('input[type="checkbox"]').prop('disabled', true);
+	
 	document.getElementById('toast').innerHTML = '<i class="fa fa-circle-notch fa-spin"></i> Loading Animated Chart';
 	document.getElementById('toast').className = 'show';
 	document.getElementById('playButton').disabled = true;
 	document.getElementById('yearsRange').disabled = true;
-	
-	google.charts.load('current', {'packages':['corechart']});
 	
 	xhttpChart = new XMLHttpRequest();
 	xhttpChart.open("get", "load_data_for_animated_chart", true);
@@ -390,49 +432,59 @@ function showAnimatedChartUser()
 		animatedChart.resetIndex();
 		
 		var resultSTR = xhttpChart.responseText;
-		var dataWrapper = JSON.parse(resultSTR);
-		console.log(dataWrapper);
-		
-		for (var i = firstYear; i <= lastYear; i++)
+		if (isJSONString(resultSTR))
 		{
-			if (dataWrapper[i] != undefined)
+			var dataWrapper = JSON.parse(resultSTR);
+			console.log(dataWrapper);
+			
+			for (var i = firstYear; i <= lastYear; i++)
 			{
-				var arrayData = new ArrayData();
-				arrayData.insertData(dataWrapper[i]);
-				animatedChart.addYearData(arrayData.data);
-				animatedChart.addYear(i);
+				if (dataWrapper[i] != undefined)
+				{
+					var arrayData = new ArrayData();
+					arrayData.insertData(dataWrapper[i]);
+					animatedChart.addYearData(arrayData.data);
+					animatedChart.addYear(i);
+				}
+				else
+				{
+					console.log(i);
+				}
 			}
-			else
+			
+			$('#yearsRange').attr('min', animatedChart.years[0]);
+			$('#yearsRange').attr('max', animatedChart.years[animatedChart.years.length - 1]);
+			$('#yearsRange').attr('value', animatedChart.getCurrentYear());
+			document.getElementById('yearsRange').stepDown(animatedChart.years.length);
+			
+			$('#yearsLabel').empty();
+			for (var i = animatedChart.years[0]; i <= animatedChart.years[animatedChart.years.length - 1]; i++)
 			{
-				console.log(i);
+				$('#yearsLabel').append('<span onclick="showYear(this)">' + i + '</span>');
 			}
+			
+			document.getElementById('playButton').disabled = false;
+			document.getElementById('yearsRange').disabled = false;
+			
+			document.getElementById('toast').className = '';
+			
+			console.log(arrayData.data);
+//			animatedChart.setData(arrayData.data);
+			
+			drawAnimatedChart();
 		}
-		
-		$('#yearsRange').attr('min', animatedChart.years[0]);
-		$('#yearsRange').attr('max', animatedChart.years[animatedChart.years.length - 1]);
-		$('#yearsRange').attr('value', animatedChart.getCurrentYear());
-		document.getElementById('yearsRange').stepDown(animatedChart.years.length);
-		
-		$('#yearsLabel').empty();
-		for (var i = animatedChart.years[0]; i <= animatedChart.years[animatedChart.years.length - 1]; i++)
+		else
 		{
-			$('#yearsLabel').append('<span onclick="showYear(this)">' + i + '</span>');
+			$('input[type="checkbox"]').prop('disabled', false);
+			document.getElementById('toast').className = '';
 		}
-		
-		document.getElementById('playButton').disabled = false;
-		document.getElementById('yearsRange').disabled = false;
-		
-		document.getElementById('toast').className = '';
-		
-		console.log(arrayData.data);
-//		animatedChart.setData(arrayData.data);
-		
-		drawAnimatedChart();
 	}
 }
 
 function loadCountryData(clicked)
 {
+	$('input[type="checkbox"]').prop('disabled', true);
+	
 	document.getElementById('toast').innerHTML = '<i class="fa fa-circle-notch fa-spin"></i> Loading selected data';
 	document.getElementById('toast').className = 'show';
 	document.getElementById('playButton').disabled = true;
@@ -463,6 +515,9 @@ function removeCountryData(clicked)
 {
 	var countryCode = clicked.value;
 	selectedCountries.splice(selectedCountries.indexOf(countryCode), 1);
+	
+	clicked.parentElement.parentElement.previousElementSibling.children[0].checked = false;
+	
 	if (selectedCountries.length == 0)
 	{
 		$('#animated-chart').empty();
@@ -512,6 +567,113 @@ function checkBoxCountryHandler(clicked)
 	}
 }
 
+/* ALL REGION'S COUNTRIES SELECTION */
+function getCopyArrayCheckBoxsPosition(countryCode)
+{
+	var index = -1;
+	var i = 0;
+	var found = false;
+	while (!found && i < copyArrayCheckBoxs.length)
+	{
+		if (copyArrayCheckBoxs[i].input[0].value == countryCode)
+		{
+			index = i;
+			found = true;
+		}
+		i++;
+	}
+	return index;
+}
+
+function loadRegionData(countries)
+{
+	for (var i = 0; i < countries.length; i++)
+	{
+		if (countries[i].checked == false)
+		{
+			selectedCountries.push(countries[i].value);
+			
+			countries[i].checked = true;
+			var index = getCopyArrayCheckBoxsPosition(countries[i].value)
+			if (index >= 0)
+			{
+				copyArrayCheckBoxs[index].input[0].checked = true;
+			}
+		}
+	}
+	
+	if (selectedCountries.length == 0)
+	{
+		$('#animated-chart').empty();
+		$('#animated-chart').append('<p>Select country/ies to show on the chart from right menu</p>');
+		
+		document.getElementById('playButton').disabled = true;
+		document.getElementById('yearsRange').disabled = true;
+		$('#yearsLabel').empty();
+	}
+	else
+	{
+		loadCountryData(null);
+	}
+}
+
+function removeRegionData(countries)
+{
+	for (var i = 0; i < countries.length; i++)
+	{
+		if (countries[i].checked == true)
+		{
+			selectedCountries.splice(selectedCountries.indexOf(countries[i].value), 1);
+			
+			countries[i].checked = false;
+			var index = getCopyArrayCheckBoxsPosition(countries[i].value)
+			if (index >= 0)
+			{
+				copyArrayCheckBoxs[index].input[0].checked = true;
+			}
+		}
+	}
+	
+	if (selectedCountries.length == 0)
+	{
+		$('#animated-chart').empty();
+		$('#animated-chart').append('<p>Select country/ies to show on the chart from right menu</p>');
+		
+		document.getElementById('playButton').disabled = true;
+		document.getElementById('yearsRange').disabled = true;
+		$('#yearsLabel').empty();
+	}
+	else
+	{
+		loadCountryData(null);
+	}
+}
+
+function checkBoxRegionHandler(clicked)
+{
+	document.getElementById('playButton').classList.remove("paused");
+	var region = clicked.value;
+//	console.log(region);
+	var countries = null;
+	if (null != document.getElementById(region))
+	{
+		countries = document.getElementById(region).getElementsByClassName('country-checkbox');
+//		console.log(countries);
+	}
+	if (null != countries)
+	{
+		if (clicked.checked == true)
+		{
+			loadRegionData(countries);
+		}
+		else if (clicked.checked == false)
+		{
+			removeRegionData(countries);
+		}
+	}
+}
+
+/* SEARCH BAR */
 function searchCountry(input)
 {
 	$('#search-result-container').empty();
@@ -537,4 +699,10 @@ function searchCountry(input)
 	{
 		$('#search-result-container').hide();
 	}
+}
+
+/* LOAD CHARTS LIBRARY */
+function loadGoogleChartsLibrary()
+{
+	google.charts.load('current', {'packages':['corechart']});
 }

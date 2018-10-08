@@ -13,7 +13,7 @@
 	<script src="js/analysis_chart.js"></script>
 	<title>Analysis</title>
 </head>
-<body onload="loadGoogleChartsLibrary(); loadCheckboxs();">
+<body onload="loadGoogleChartsLibrary(); loadInitialView();">
 	<nav>
 		<a href="home.html"><i class="fa fa-fw fa-globe"></i> Geo Map</a>
 		<a class="active" href="analysis.html"><i class="fa fa-fw fa-chart-line"></i> Analysis year by year</a>
@@ -149,5 +149,7 @@
 			<div id="regions-selector-btn" class="accordion" onclick="openRegionsSelectorPanel()">Regions Selector <i class="fas fa-angle-up"></i></div>	
 		</div> -->
 	</div>
+	
+	<div id="toast"></div>
 </body>
 </html>

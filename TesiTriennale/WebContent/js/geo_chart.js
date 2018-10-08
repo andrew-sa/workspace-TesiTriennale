@@ -32,6 +32,31 @@ var lastYear = (new Date()).getFullYear();
 //	chart.draw(data, options);
 //}
 
+function isJSONString(str)
+{
+	var regexJSONObject = /^\{.*\}$/;
+	var regexJSONArray = /^\[.*\]$/;
+	if (str.match(regexJSONObject) || str.match(regexJSONArray))
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+/* LOAD CHARTS LIBRARY */
+function loadGoogleChartsLibrary()
+{
+	google.charts.load('current', {
+		'packages':['geochart', 'corechart'],
+		// Note: you will need to get a mapsApiKey for your project.
+		// See: https://developers.google.com/chart/interactive/docs/basic_load_libs#load-settings
+		'mapsApiKey': 'AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY'
+		});
+}
+
 function GeoChart()
 {
 	this.options = {
@@ -260,185 +285,36 @@ function showCountryInfo()
 		document.getElementById('toast').className = '';
 		
 		var infoJSON = xhttp.responseText;
-		var info = JSON.parse(infoJSON);
-		
-		$('#countryModal > .modal-content > .modal-header > h2').html(info.wiki.name);
-		
-		$("#country-general > img").attr("width", "300px");
-		$("#country-general > img").attr("src", info.wiki.image);
-		$("#country-general > p").html(info.wiki.description);
-		
-		if (info.news.length > 0)
+		if (isJSONString(infoJSON))
 		{
-			for (var i = 0; i < info.news.length; i++)
+			var info = JSON.parse(infoJSON);
+			
+			$('#countryModal > .modal-content > .modal-header > h2').html(info.wiki.name);
+			
+			$("#country-general > img").attr("width", "300px");
+			$("#country-general > img").attr("src", info.wiki.image);
+			$("#country-general > p").html(info.wiki.description);
+			
+			if (info.news.length > 0)
 			{
-				$('#country-news').append('<p><a href="' + info.news[i].url + '" target="_blank">' + info.news[i].title + '</a><span><b>' + info.news[i].info + '</b></span><span>' + info.news[i].description + '</span></p>')
-			}
-		}
-		else
-		{
-			$('#country-news').append('<p>N/A</p>');
-		}
-		
-		$('#countryModal').show();
-		
-		lineChartCountryInfo = new LineChartCountryInfo();
-		var poverty = info.poverty;
-		var netMigration = info.netMigration;
-		var gdpPerCapita = info.gdpPerCapita;
-		
-		if (poverty.length > 0 && netMigration.length > 0 && gdpPerCapita.length > 0)
-		{
-			var options = {
-				chartArea: {
-					width: '85%',
-					height: '85%'
-				},
-				curveType: 'none',
-				legend: {
-					position: 'top',
-					textStyle: {
-						fontSize: 20,
-						bold: true
-					}
-				},
-				backgroundColor: '#f1f1f1',
-				lineWidth: 4,
-				pointSize: 8,
-				interpolateNulls: true,
-				theme: 'material',
-				focusTarget: 'datum',
-				series: {
-					0: {
-						targetAxisIndex: 0,
-						color: '#4CAF50'
-					},
-					1: {
-						targetAxisIndex: 1,
-						color: '#777'
-					},
-					2: {
-						targetAxisIndex: 2,
-						color: '#111'
-					}
-				},
-				vAxes: {
-					0: {
-						title: 'Poverty (expressed as a percentage)',
-						titleTextStyle: {
-							fontSize: 20
-						},
-						textStyle: {
-							fontSize: 15
-						},
-					},
-					1: {
-						title: 'GDP per capita / Net migration',
-						titleTextStyle: {
-							fontSize: 20
-						},
-						textStyle: {
-							fontSize: 15
-						},
-						format: 'short'
-					},
-					2: {
-//						title: 'GDP per capita',
-						textPosition: 'in',
-						titleTextStyle: {
-							fontSize: 20
-						},
-						textStyle: {
-							fontSize: 15
-						},
-						format: 'short'
-					}
+				for (var i = 0; i < info.news.length; i++)
+				{
+					$('#country-news').append('<p><a href="' + info.news[i].url + '" target="_blank">' + info.news[i].title + '</a><span><b>' + info.news[i].info + '</b></span><span>' + info.news[i].description + '</span></p>')
 				}
-			};
+			}
+			else
+			{
+				$('#country-news').append('<p>N/A</p>');
+			}
 			
-//			var arrayData = [['Year', 'Poverty', 'Net migration']];
-//			for (var year = firstYear; year <= lastYear; year++)
-//			{
-//				arrayData.push([year]);
-//			}
+			$('#countryModal').show();
 			
-			var labels = ['Year', 'Poverty', 'Net migration', 'GDP per capita'];
-			var arrayData = createArrayData(labels);
-			arrayData = fillArrayData(arrayData, poverty);
-			arrayData = fillArrayData(arrayData, netMigration);
-			arrayData = fillArrayData(arrayData, gdpPerCapita);
+			lineChartCountryInfo = new LineChartCountryInfo();
+			var poverty = info.poverty;
+			var netMigration = info.netMigration;
+			var gdpPerCapita = info.gdpPerCapita;
 			
-//			for (var i = 1; i < arrayData.length; i++)
-//			{
-//				var j = 0;
-//				var found = false;
-//				while (!found && j < poverty.length)
-//				{
-//					if (arrayData[i][0].getFullYear() == poverty[j].year)
-//					{
-//						found = true;
-//						arrayData[i].push(poverty[j].value);
-//						poverty.splice(j, 1);
-//					}
-//					j++;
-//				}
-//				if (!found)
-//				{
-//					arrayData[i].push(null);
-//				}
-//			}
-//			
-//			for (var i = 1; i < arrayData.length; i++)
-//			{
-//				var j = 0;
-//				var found = false;
-//				while (!found && j < netMigration.length)
-//				{
-//					if (arrayData[i][0].getFullYear() == netMigration[j].year)
-//					{
-//						found = true;
-//						arrayData[i].push(netMigration[j].value);
-//						netMigration.splice(j, 1);
-//					}
-//					j++;
-//				}
-//				if (!found)
-//				{
-//					arrayData[i].push(null);
-//				}
-//			}
-//			
-//			for (var i = 1; i < arrayData.length; i++)
-//			{
-//				var j = 0;
-//				var found = false;
-//				while (!found && j < gdpPerCapita.length)
-//				{
-//					if (arrayData[i][0].getFullYear() == gdpPerCapita[j].year)
-//					{
-//						found = true;
-//						arrayData[i].push(gdpPerCapita[j].value);
-//						gdpPerCapita.splice(j, 1);
-//					}
-//					j++;
-//				}
-//				if (!found)
-//				{
-//					arrayData[i].push(null);
-//				}
-//			}
-			
-			lineChartCountryInfo.setOptions(options);
-			lineChartCountryInfo.setData(arrayData);
-			
-			$('#analysis-chart').after('<a id="compare-link" href="' + 'analysis.html?show=' + currentCountry + '"' + '>Compare with other countries </a>');
-			$('#analysis-chart').css('height', '30em');
-			drawLineChartCountryInfo();
-//			google.charts.setOnLoadCallback(drawAnalysisChart);
-		}
-		else if (poverty.length > 0)
-		{
-			if (netMigration.length > 0)
+			if (poverty.length > 0 && netMigration.length > 0 && gdpPerCapita.length > 0)
 			{
 				var options = {
 					chartArea: {
@@ -467,6 +343,10 @@ function showCountryInfo()
 						1: {
 							targetAxisIndex: 1,
 							color: '#777'
+						},
+						2: {
+							targetAxisIndex: 2,
+							color: '#111'
 						}
 					},
 					vAxes: {
@@ -480,7 +360,18 @@ function showCountryInfo()
 							},
 						},
 						1: {
-							title: 'Net migration',
+							title: 'GDP per capita / Net migration',
+							titleTextStyle: {
+								fontSize: 20
+							},
+							textStyle: {
+								fontSize: 15
+							},
+							format: 'short'
+						},
+						2: {
+//							title: 'GDP per capita',
+							textPosition: 'in',
 							titleTextStyle: {
 								fontSize: 20
 							},
@@ -492,13 +383,395 @@ function showCountryInfo()
 					}
 				};
 				
-				var labels = ['Year', 'Poverty', 'Net migration'];
+//				var arrayData = [['Year', 'Poverty', 'Net migration']];
+//				for (var year = firstYear; year <= lastYear; year++)
+//				{
+//					arrayData.push([year]);
+//				}
+				
+				var labels = ['Year', 'Poverty', 'Net migration', 'GDP per capita'];
 				var arrayData = createArrayData(labels);
 				arrayData = fillArrayData(arrayData, poverty);
 				arrayData = fillArrayData(arrayData, netMigration);
+				arrayData = fillArrayData(arrayData, gdpPerCapita);
+				
+//				for (var i = 1; i < arrayData.length; i++)
+//				{
+//					var j = 0;
+//					var found = false;
+//					while (!found && j < poverty.length)
+//					{
+//						if (arrayData[i][0].getFullYear() == poverty[j].year)
+//						{
+//							found = true;
+//							arrayData[i].push(poverty[j].value);
+//							poverty.splice(j, 1);
+//						}
+//						j++;
+//					}
+//					if (!found)
+//					{
+//						arrayData[i].push(null);
+//					}
+//				}
+//				
+//				for (var i = 1; i < arrayData.length; i++)
+//				{
+//					var j = 0;
+//					var found = false;
+//					while (!found && j < netMigration.length)
+//					{
+//						if (arrayData[i][0].getFullYear() == netMigration[j].year)
+//						{
+//							found = true;
+//							arrayData[i].push(netMigration[j].value);
+//							netMigration.splice(j, 1);
+//						}
+//						j++;
+//					}
+//					if (!found)
+//					{
+//						arrayData[i].push(null);
+//					}
+//				}
+//				
+//				for (var i = 1; i < arrayData.length; i++)
+//				{
+//					var j = 0;
+//					var found = false;
+//					while (!found && j < gdpPerCapita.length)
+//					{
+//						if (arrayData[i][0].getFullYear() == gdpPerCapita[j].year)
+//						{
+//							found = true;
+//							arrayData[i].push(gdpPerCapita[j].value);
+//							gdpPerCapita.splice(j, 1);
+//						}
+//						j++;
+//					}
+//					if (!found)
+//					{
+//						arrayData[i].push(null);
+//					}
+//				}
 				
 				lineChartCountryInfo.setOptions(options);
 				lineChartCountryInfo.setData(arrayData);
+				
+				$('#analysis-chart').after('<a id="compare-link" href="' + 'analysis.html?show=' + currentCountry + '"' + '>Compare with other countries </a>');
+				$('#analysis-chart').css('height', '30em');
+				drawLineChartCountryInfo();
+//				google.charts.setOnLoadCallback(drawAnalysisChart);
+			}
+			else if (poverty.length > 0)
+			{
+				if (netMigration.length > 0)
+				{
+					var options = {
+						chartArea: {
+							width: '85%',
+							height: '85%'
+						},
+						curveType: 'none',
+						legend: {
+							position: 'top',
+							textStyle: {
+								fontSize: 20,
+								bold: true
+							}
+						},
+						backgroundColor: '#f1f1f1',
+						lineWidth: 4,
+						pointSize: 8,
+						interpolateNulls: true,
+						theme: 'material',
+						focusTarget: 'datum',
+						series: {
+							0: {
+								targetAxisIndex: 0,
+								color: '#4CAF50'
+							},
+							1: {
+								targetAxisIndex: 1,
+								color: '#777'
+							}
+						},
+						vAxes: {
+							0: {
+								title: 'Poverty (expressed as a percentage)',
+								titleTextStyle: {
+									fontSize: 20
+								},
+								textStyle: {
+									fontSize: 15
+								},
+							},
+							1: {
+								title: 'Net migration',
+								titleTextStyle: {
+									fontSize: 20
+								},
+								textStyle: {
+									fontSize: 15
+								},
+								format: 'short'
+							}
+						}
+					};
+					
+					var labels = ['Year', 'Poverty', 'Net migration'];
+					var arrayData = createArrayData(labels);
+					arrayData = fillArrayData(arrayData, poverty);
+					arrayData = fillArrayData(arrayData, netMigration);
+					
+					lineChartCountryInfo.setOptions(options);
+					lineChartCountryInfo.setData(arrayData);
+				}
+				else if (gdpPerCapita.length > 0)
+				{
+					var options = {
+						chartArea: {
+							width: '85%',
+							height: '85%'
+						},
+						curveType: 'none',
+						legend: {
+							position: 'top',
+							textStyle: {
+								fontSize: 20,
+								bold: true
+							}
+						},
+						backgroundColor: '#f1f1f1',
+						lineWidth: 4,
+						pointSize: 8,
+						interpolateNulls: true,
+						theme: 'material',
+						focusTarget: 'datum',
+						series: {
+							0: {
+								targetAxisIndex: 0,
+								color: '#4CAF50'
+							},
+							1: {
+								targetAxisIndex: 1,
+								color: '#777'
+							}
+						},
+						vAxes: {
+							0: {
+								title: 'Poverty (expressed as a percentage)',
+								titleTextStyle: {
+									fontSize: 20
+								},
+								textStyle: {
+									fontSize: 15
+								},
+							},
+							1: {
+								title: 'GDP per capita',
+								titleTextStyle: {
+									fontSize: 20
+								},
+								textStyle: {
+									fontSize: 15
+								},
+								format: 'short'
+							}
+						}
+					};
+					
+					var labels = ['Year', 'Poverty', 'GDP per capita'];
+					var arrayData = createArrayData(labels);
+					arrayData = fillArrayData(arrayData, poverty);
+					arrayData = fillArrayData(arrayData, gdpPerCapita);
+					
+					lineChartCountryInfo.setOptions(options);
+					lineChartCountryInfo.setData(arrayData);
+				}
+				else
+				{
+					var options = {
+						chartArea: {
+							width: '85%',
+							height: '85%'
+						},
+						curveType: 'none',
+						legend: {
+							position: 'top',
+							textStyle: {
+								fontSize: 20,
+								bold: true
+							}
+						},
+						backgroundColor: '#f1f1f1',
+						lineWidth: 4,
+						pointSize: 8,
+						interpolateNulls: true,
+						theme: 'material',
+						focusTarget: 'datum',
+						series: {
+							0: {
+								targetAxisIndex: 0,
+								color: '#4CAF50'
+							}
+						},
+						vAxes: {
+							0: {
+								title: 'Poverty (expressed as a percentage)',
+								titleTextStyle: {
+									fontSize: 20
+								},
+								textStyle: {
+									fontSize: 15
+								}
+							}
+						}
+					};
+					
+		//			var arrayData = [['Year', 'Poverty']];
+		//			for (var i = 0; i < poverty.length; i++)
+		//			{
+		//				arrayData.push([poverty[i].year, poverty[i].value]);
+		//			}
+					
+					var labels = ['Year', 'Poverty'];
+					var arrayData = createArrayData(labels);
+					arrayData = fillArrayData(arrayData, poverty);
+					
+					lineChartCountryInfo.setOptions(options);
+					lineChartCountryInfo.setData(arrayData);
+				}
+			
+				$('#analysis-chart').after('<a id="compare-link" href="' + 'analysis.html?show=' + currentCountry + '"' + '>Compare with other countries </a>');
+				$('#analysis-chart').css('height', '30em');
+				drawLineChartCountryInfo();
+		//		google.charts.setOnLoadCallback(drawAnalysisChart);
+			}
+			else if (netMigration.length > 0)
+			{
+				if (gdpPerCapita.length > 0)
+				{
+					var options = {
+						chartArea: {
+							width: '85%',
+							height: '85%'
+						},
+						curveType: 'none',
+						legend: {
+							position: 'top',
+							textStyle: {
+								fontSize: 20,
+								bold: true
+							}
+						},
+						backgroundColor: '#f1f1f1',
+						lineWidth: 4,
+						pointSize: 8,
+						interpolateNulls: true,
+						theme: 'material',
+						focusTarget: 'datum',
+						series: {
+							0: {
+								targetAxisIndex: 0,
+								color: '#777'
+							},
+							1: {
+								targetAxisIndex: 1,
+								color: '#111'
+							}
+						},
+						vAxes: {
+							0: {
+								title: 'Net migration',
+								titleTextStyle: {
+									fontSize: 20
+								},
+								textStyle: {
+									fontSize: 15
+								},
+								format: 'short'
+							},
+							1: {
+								title: 'GDP per capita',
+								titleTextStyle: {
+									fontSize: 20
+								},
+								textStyle: {
+									fontSize: 15
+								},
+								format: 'short'
+							}
+						}
+					};
+					
+					var labels = ['Year', 'Net migration', 'GDP per capita'];
+					var arrayData = createArrayData(labels);
+					arrayData = fillArrayData(arrayData, netMigration);
+					arrayData = fillArrayData(arrayData, gdpPerCapita);
+					
+					lineChartCountryInfo.setOptions(options);
+					lineChartCountryInfo.setData(arrayData);
+				}
+				else
+				{
+					var options = {
+						chartArea: {
+							width: '85%',
+							height: '85%'
+						},
+						curveType: 'none',
+						legend: {
+							position: 'top',
+							textStyle: {
+								fontSize: 20,
+								bold: true
+							}
+						},
+						backgroundColor: '#f1f1f1',
+						lineWidth: 4,
+						pointSize: 8,
+						interpolateNulls: true,
+						theme: 'material',
+						focusTarget: 'datum',
+						series: {
+							0: {
+								targetAxisIndex: 0,
+								color: '#555'
+							}
+						},
+						vAxes: {
+							0: {
+								title: 'Net migration',
+								titleTextStyle: {
+									fontSize: 20
+								},
+								textStyle: {
+									fontSize: 15
+								},
+								format: 'short'
+							}
+						}
+					};
+					
+//					var arrayData = [['Year', 'Net migration']];
+//					for (var i = 0; i < netMigration.length; i++)
+//					{
+//						arrayData.push([netMigration[i].year, netMigration[i].value]);
+//					}
+					
+					var labels = ['Year', 'Net migration'];
+					var arrayData = createArrayData(labels);
+					arrayData = fillArrayData(arrayData, netMigration);
+					
+					lineChartCountryInfo.setOptions(options);
+					lineChartCountryInfo.setData(arrayData);
+				}
+				
+				$('#analysis-chart').after('<a id="compare-link" href="' + 'analysis.html?show=' + currentCountry + '"' + '>Compare with other countries </a>');
+				$('#analysis-chart').css('height', '30em');
+				drawLineChartCountryInfo();
+//				google.charts.setOnLoadCallback(drawAnalysisChart);
 			}
 			else if (gdpPerCapita.length > 0)
 			{
@@ -524,148 +797,11 @@ function showCountryInfo()
 					series: {
 						0: {
 							targetAxisIndex: 0,
-							color: '#4CAF50'
-						},
-						1: {
-							targetAxisIndex: 1,
-							color: '#777'
-						}
-					},
-					vAxes: {
-						0: {
-							title: 'Poverty (expressed as a percentage)',
-							titleTextStyle: {
-								fontSize: 20
-							},
-							textStyle: {
-								fontSize: 15
-							},
-						},
-						1: {
-							title: 'GDP per capita',
-							titleTextStyle: {
-								fontSize: 20
-							},
-							textStyle: {
-								fontSize: 15
-							},
-							format: 'short'
-						}
-					}
-				};
-				
-				var labels = ['Year', 'Poverty', 'GDP per capita'];
-				var arrayData = createArrayData(labels);
-				arrayData = fillArrayData(arrayData, poverty);
-				arrayData = fillArrayData(arrayData, gdpPerCapita);
-				
-				lineChartCountryInfo.setOptions(options);
-				lineChartCountryInfo.setData(arrayData);
-			}
-			else
-			{
-				var options = {
-					chartArea: {
-						width: '85%',
-						height: '85%'
-					},
-					curveType: 'none',
-					legend: {
-						position: 'top',
-						textStyle: {
-							fontSize: 20,
-							bold: true
-						}
-					},
-					backgroundColor: '#f1f1f1',
-					lineWidth: 4,
-					pointSize: 8,
-					interpolateNulls: true,
-					theme: 'material',
-					focusTarget: 'datum',
-					series: {
-						0: {
-							targetAxisIndex: 0,
-							color: '#4CAF50'
-						}
-					},
-					vAxes: {
-						0: {
-							title: 'Poverty (expressed as a percentage)',
-							titleTextStyle: {
-								fontSize: 20
-							},
-							textStyle: {
-								fontSize: 15
-							}
-						}
-					}
-				};
-				
-	//			var arrayData = [['Year', 'Poverty']];
-	//			for (var i = 0; i < poverty.length; i++)
-	//			{
-	//				arrayData.push([poverty[i].year, poverty[i].value]);
-	//			}
-				
-				var labels = ['Year', 'Poverty'];
-				var arrayData = createArrayData(labels);
-				arrayData = fillArrayData(arrayData, poverty);
-				
-				lineChartCountryInfo.setOptions(options);
-				lineChartCountryInfo.setData(arrayData);
-			}
-		
-			$('#analysis-chart').after('<a id="compare-link" href="' + 'analysis.html?show=' + currentCountry + '"' + '>Compare with other countries </a>');
-			$('#analysis-chart').css('height', '30em');
-			drawLineChartCountryInfo();
-	//		google.charts.setOnLoadCallback(drawAnalysisChart);
-		}
-		else if (netMigration.length > 0)
-		{
-			if (gdpPerCapita.length > 0)
-			{
-				var options = {
-					chartArea: {
-						width: '85%',
-						height: '85%'
-					},
-					curveType: 'none',
-					legend: {
-						position: 'top',
-						textStyle: {
-							fontSize: 20,
-							bold: true
-						}
-					},
-					backgroundColor: '#f1f1f1',
-					lineWidth: 4,
-					pointSize: 8,
-					interpolateNulls: true,
-					theme: 'material',
-					focusTarget: 'datum',
-					series: {
-						0: {
-							targetAxisIndex: 0,
-							color: '#777'
-						},
-						1: {
-							targetAxisIndex: 1,
 							color: '#111'
 						}
 					},
 					vAxes: {
 						0: {
-							title: 'Net migration',
-							titleTextStyle: {
-								fontSize: 20
-							},
-							textStyle: {
-								fontSize: 15
-							},
-							format: 'short'
-						},
-						1: {
 							title: 'GDP per capita',
 							titleTextStyle: {
 								fontSize: 20
@@ -678,130 +814,22 @@ function showCountryInfo()
 					}
 				};
 				
-				var labels = ['Year', 'Net migration', 'GDP per capita'];
+				var labels = ['Year', 'GDP per capita'];
 				var arrayData = createArrayData(labels);
-				arrayData = fillArrayData(arrayData, netMigration);
 				arrayData = fillArrayData(arrayData, gdpPerCapita);
 				
 				lineChartCountryInfo.setOptions(options);
 				lineChartCountryInfo.setData(arrayData);
+				
+				$('#analysis-chart').after('<a id="compare-link" href="' + 'analysis.html?show=' + currentCountry + '"' + '>Compare with other countries </a>');
+				$('#analysis-chart').css('height', '30em');
+				drawLineChartCountryInfo();
+//				google.charts.setOnLoadCallback(drawAnalysisChart);
 			}
 			else
 			{
-				var options = {
-					chartArea: {
-						width: '85%',
-						height: '85%'
-					},
-					curveType: 'none',
-					legend: {
-						position: 'top',
-						textStyle: {
-							fontSize: 20,
-							bold: true
-						}
-					},
-					backgroundColor: '#f1f1f1',
-					lineWidth: 4,
-					pointSize: 8,
-					interpolateNulls: true,
-					theme: 'material',
-					focusTarget: 'datum',
-					series: {
-						0: {
-							targetAxisIndex: 0,
-							color: '#555'
-						}
-					},
-					vAxes: {
-						0: {
-							title: 'Net migration',
-							titleTextStyle: {
-								fontSize: 20
-							},
-							textStyle: {
-								fontSize: 15
-							},
-							format: 'short'
-						}
-					}
-				};
-				
-//				var arrayData = [['Year', 'Net migration']];
-//				for (var i = 0; i < netMigration.length; i++)
-//				{
-//					arrayData.push([netMigration[i].year, netMigration[i].value]);
-//				}
-				
-				var labels = ['Year', 'Net migration'];
-				var arrayData = createArrayData(labels);
-				arrayData = fillArrayData(arrayData, netMigration);
-				
-				lineChartCountryInfo.setOptions(options);
-				lineChartCountryInfo.setData(arrayData);
+				$('#analysis-chart').html('N/A');
 			}
-			
-			$('#analysis-chart').after('<a id="compare-link" href="' + 'analysis.html?show=' + currentCountry + '"' + '>Compare with other countries </a>');
-			$('#analysis-chart').css('height', '30em');
-			drawLineChartCountryInfo();
-//			google.charts.setOnLoadCallback(drawAnalysisChart);
-		}
-		else if (gdpPerCapita.length > 0)
-		{
-			var options = {
-				chartArea: {
-					width: '85%',
-					height: '85%'
-				},
-				curveType: 'none',
-				legend: {
-					position: 'top',
-					textStyle: {
-						fontSize: 20,
-						bold: true
-					}
-				},
-				backgroundColor: '#f1f1f1',
-				lineWidth: 4,
-				pointSize: 8,
-				interpolateNulls: true,
-				theme: 'material',
-				focusTarget: 'datum',
-				series: {
-					0: {
-						targetAxisIndex: 0,
-						color: '#111'
-					}
-				},
-				vAxes: {
-					0: {
-						title: 'GDP per capita',
-						titleTextStyle: {
-							fontSize: 20
-						},
-						textStyle: {
-							fontSize: 15
-						},
-						format: 'short'
-					}
-				}
-			};
-			
-			var labels = ['Year', 'GDP per capita'];
-			var arrayData = createArrayData(labels);
-			arrayData = fillArrayData(arrayData, gdpPerCapita);
-			
-			lineChartCountryInfo.setOptions(options);
-			lineChartCountryInfo.setData(arrayData);
-			
-			$('#analysis-chart').after('<a id="compare-link" href="' + 'analysis.html?show=' + currentCountry + '"' + '>Compare with other countries </a>');
-			$('#analysis-chart').css('height', '30em');
-			drawLineChartCountryInfo();
-//			google.charts.setOnLoadCallback(drawAnalysisChart);
-		}
-		else
-		{
-			$('#analysis-chart').html('N/A');
 		}
 	}
 }
@@ -922,8 +950,10 @@ function showGeoChart()
 {
 	if (xhttp.readyState == 4 && xhttp.status == 200)
 	{
+		var stringJSON = xhttp.responseText;
+		if (isJSONString(stringJSON))
+		{
 			var arrayData = [['Country', 'Poverty']];
-			var stringJSON = xhttp.responseText;
 			var valuesCountries = JSON.parse(stringJSON);
 			for (var i = 0; i < valuesCountries.length; i++)
 			{
@@ -934,6 +964,7 @@ function showGeoChart()
 			
 //			google.charts.setOnLoadCallback(drawGeoChart);
 			drawGeoChart();
+		}
 	}
 }
 
@@ -964,16 +995,6 @@ function setRegion(clicked)
 		$('geo-chart').empty();
 		drawGeoChart();
 	}
-}
-
-function loadChartsLibrary()
-{
-	google.charts.load('current', {
-			'packages':['geochart', 'corechart'],
-			// Note: you will need to get a mapsApiKey for your project.
-			// See: https://developers.google.com/chart/interactive/docs/basic_load_libs#load-settings
-			'mapsApiKey': 'AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY'
-			});
 }
 
 function addCollapsibleListener()
