@@ -212,6 +212,7 @@
 	-webkit-transform: scale(1.4); /* Safari and Chrome */
 	-o-transform: scale(1.4); /* Opera */
 	width: 2em;
+	align-self: center;
 }
 
 /* COUNTRY SEARCH */

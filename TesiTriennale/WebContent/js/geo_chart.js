@@ -1028,4 +1028,6 @@ function selectRadioBox()
 			radioboxs[i].checked = false;
 		}
 	}
+	
+	$('#analysis-link').attr('href', 'analysis.html');
 }

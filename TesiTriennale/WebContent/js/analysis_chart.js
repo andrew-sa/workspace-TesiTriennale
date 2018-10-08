@@ -1,49 +1,10 @@
 var xhttp;
 var xhttpYears;
+var xhttpRegion;
 
 var arrayCollapsibleRegions = [];
 var lastYear = (new Date).getFullYear();
-//var arrayData = [
-//	['Year'],
-////	['2000'],
-////	['2001'],
-////	['2002'],
-////	['2003'],
-////	['2004'],
-////	['2005'],
-////	['2006'],
-////    ['2007'],
-////    ['2008'],
-////    ['2009'],
-////    ['2010'],
-////    ['2011'],
-////    ['2012'],
-////    ['2013'],
-////    ['2014'],
-////    ['2015'],
-////    ['2016'],
-////    ['2017'],
-////    ['2018']
-//	[new Date(2000, 11, 31)],
-//	[new Date(2001, 11, 31)],
-//	[new Date(2002, 11, 31)],
-//	[new Date(2003, 11, 31)],
-//	[new Date(2004, 11, 31)],
-//	[new Date(2005, 11, 31)],
-//	[new Date(2006, 11, 31)],
-//	[new Date(2007, 11, 31)],
-//	[new Date(2008, 11, 31)],
-//	[new Date(2009, 11, 31)],
-//	[new Date(2010, 11, 31)],
-//	[new Date(2011, 11, 31)],
-//	[new Date(2012, 11, 31)],
-//	[new Date(2013, 11, 31)],
-//	[new Date(2014, 11, 31)],
-//	[new Date(2015, 11, 31)],
-//	[new Date(2016, 11, 31)],
-//	[new Date(2017, 11, 31)],
-//	[new Date(2018, 11, 31)],
-//	];
+
 var arrayCheckBoxs = [];
 var copyArrayCheckBoxs = [];
 var povertyAnalysisChart = new AnalysisChart();
@@ -430,10 +391,10 @@ function loadInitialChart()
 	}
 	else
 	{
-		var regex = /^\?show\=[A-Z]{2}$/;
-		if (queryString.match(regex))
+		var regexCountry = /^\?show\=[A-Z]{2}$/;
+		var regexRegion = /^\?show\=[A-Za-z]{3,}$/;
+		if (queryString.match(regexCountry))
 		{
-//			console.log('YES');
 			var countryCode = queryString.substring(6);
 			console.log(countryCode)
 //			var boxs = document.getElementById('countries-selector-panel').getElementsByTagName('input');
@@ -461,9 +422,34 @@ function loadInitialChart()
 				$('#analysis-chart').append('<p>No values available for selected country/ies</p>');
 			}
 		}
+		else if (queryString.match(regexRegion))
+		{
+			var region = queryString.substring(6);
+			var boxs =  document.getElementsByClassName('region-checkbox');
+			var checkbox = null;
+			var found = false;
+			var i = 0;
+			while (!found && i < boxs.length)
+			{
+				if (boxs[i].value == region)
+				{
+					found = true;
+					checkbox = boxs[i];
+				}
+				i++
+			}
+			if (null != checkbox)
+			{
+				checkbox.checked = true;
+				checkBoxRegionHandler(checkbox);
+			}
+			else
+			{
+				$('#analysis-chart').append('<p>No values available for selected country/ies</p>');
+			}
+		}
 		else
 		{
-//			console.log('NO');
 			$('#analysis-chart').append('<p>Select country/ies to show on the chart from right menu</p>');
 		}
 	}
@@ -639,6 +625,7 @@ function removeCountryData(clicked)
 //	var index = getPosition(country);
 	console.log(dataTypes);
 	console.log(dataTypes.length);
+	clicked.parentElement.parentElement.previousElementSibling.children[0].checked = false;
 	for (var i = 0; i < dataTypes.length; i++)
 	{
 		console.log('we');
@@ -725,6 +712,211 @@ function checkBoxCountryHandler(clicked)
 	}
 }
 
+function loadRegionDataChart()
+{
+	if (xhttpRegion.readyState == 4 && xhttpRegion.status == 200)
+	{
+		document.body.style.cursor = "auto";
+		
+		var responseSTR = xhttpRegion.responseText;
+		var responseARRAY = JSON.parse(responseSTR);
+		for (var pos = 0; pos < responseARRAY.length; pos++)
+		{
+			var name = responseARRAY[pos].name;
+			var poverty = responseARRAY[pos].poverty;
+			var netmigration = responseARRAY[pos].netmigration;
+			var gdppercapita = responseARRAY[pos].gdppercapita;
+			
+			if (poverty.length > 0)
+			{
+	//			console.log(povertyAnalysisChart.arrayData);
+				povertyAnalysisChart.arrayData[0].push(name);
+				for (var i = 1; i < povertyAnalysisChart.arrayData.length; i++)
+				{
+					var value = null;
+					var j = 0;
+					while (value == null && j < poverty.length)
+					{
+						if (povertyAnalysisChart.arrayData[i][0].getFullYear() == poverty[j].year)
+						{
+							value = poverty[j].value;
+							povertyAnalysisChart.arrayData[i].push(value);
+							poverty.splice(j, 1);
+						}
+						j++;
+					}
+					if (value == null)
+					{
+						povertyAnalysisChart.arrayData[i].push(null);
+					}
+				}
+			}
+			if (netmigration.length > 0)
+			{
+				netMigrationAnalysisChart.arrayData[0].push(name);
+				for (var i = 1; i < netMigrationAnalysisChart.arrayData.length; i++)
+				{
+					var value = null;
+					var j = 0;
+					while (value == null && j < netmigration.length)
+					{
+						if (netMigrationAnalysisChart.arrayData[i][0].getFullYear() == netmigration[j].year)
+						{
+							value = netmigration[j].value;
+							netMigrationAnalysisChart.arrayData[i].push(value);
+							netmigration.splice(j, 1);
+						}
+						j++;
+					}
+					if (value == null)
+					{
+						netMigrationAnalysisChart.arrayData[i].push(null);
+					}
+				}
+			}
+			if (gdppercapita.length > 0)
+			{
+				gdpPerCapitaAnalysisChart.arrayData[0].push(name);
+				for (var i = 1; i < gdpPerCapitaAnalysisChart.arrayData.length; i++)
+				{
+					var value = null;
+					var j = 0;
+					while (value == null && j < gdppercapita.length)
+					{
+						if (gdpPerCapitaAnalysisChart.arrayData[i][0].getFullYear() == gdppercapita[j].year)
+						{
+							value = gdppercapita[j].value;
+							gdpPerCapitaAnalysisChart.arrayData[i].push(value);
+							gdppercapita.splice(j, 1);
+						}
+						j++;
+					}
+					if (value == null)
+					{
+						gdpPerCapitaAnalysisChart.arrayData[i].push(null);
+					}
+				}
+			}
+		}
+		
+		drawChart();
+	}
+}
+
+function loadRegionData(queryString)
+{
+	document.body.style.cursor = "wait";
+	
+	xhttpRegion = new XMLHttpRequest();
+	xhttpRegion.open("get", "load_region_countries_data" + queryString, true);
+	xhttpRegion.setRequestHeader("connection", "close");
+	xhttpRegion.onreadystatechange = loadRegionDataChart;
+	xhttpRegion.send(null);
+}
+
+function selectRegionDataToLoad(clicked)
+{
+	var queryString = '?code=';
+	var region = clicked.value;
+	if (null != document.getElementById(region))
+	{
+		countries = document.getElementById(region).getElementsByClassName('country-checkbox');
+	}
+	if (null != countries)
+	{
+		for (i = 0; i < countries.length; i++)
+		{
+			if (countries[i].checked == false)
+			{
+				countries[i].checked = true;
+				copyArrayCheckBoxs[i].input[0].checked = true;
+				if (queryString == '?code=')
+				{
+					queryString = queryString.concat(countries[i].value);
+				}
+				else
+				{
+					queryString = queryString.concat('-' + countries[i].value);
+				}
+			}
+		}
+	}
+//	console.log(queryString);
+	loadRegionData(queryString);
+}
+
+function removeRegionData(clicked)
+{
+	var region = clicked.value;
+	if (null != document.getElementById(region))
+	{
+		countries = document.getElementById(region).getElementsByClassName('country-checkbox');
+	}
+	if (null != countries)
+	{
+		for (i = 0; i < countries.length; i++)
+		{
+			if (countries[i].checked == true)
+			{
+				countries[i].checked = false;
+				copyArrayCheckBoxs[i].input[0].checked = false;
+				
+				var country = countries[i].name;
+				for (var j = 0; j < dataTypes.length; j++)
+				{
+					var index = getPosition(country, dataTypes[j]);
+					if (index != -1)
+					{
+						removeCountryDataType(index, dataTypes[j]);
+					}
+				}
+			}
+		}
+		
+		if (currentDataType == POVERTY && povertyAnalysisChart.arrayData[0].length == 1)
+		{
+			$('#analysis-chart').empty();
+			$('#analysis-chart').append('<p>Select country/ies to show on the chart from right menu</p>');
+		}
+		else
+		{
+			drawChart();
+		}
+		
+		if (currentDataType == NET_MIGRATION && netMigrationAnalysisChart.arrayData[0].length == 1)
+		{
+			$('#analysis-chart').empty();
+			$('#analysis-chart').append('<p>Select country/ies to show on the chart from right menu</p>');
+		}
+		else
+		{
+			drawChart();
+		}
+		
+		if (currentDataType == GDP_PER_CAPITA && gdpPerCapitaAnalysisChart.arrayData[0].length == 1)
+		{
+			$('#analysis-chart').empty();
+			$('#analysis-chart').append('<p>Select country/ies to show on the chart from right menu</p>');
+		}
+		else
+		{
+			drawChart();
+		}
+	}
+}
+
+function checkBoxRegionHandler(clicked)
+{
+	if (clicked.checked == true)
+	{
+		selectRegionDataToLoad(clicked);
+	}
+	else if (clicked.checked == false)
+	{
+		removeRegionData(clicked);
+	}
+}
+
 function changeDataType(input)
 {
 	if (currentDataType != input.value)
@@ -791,41 +983,43 @@ function changeDataType(input)
 
 function clearAll() /*AGGIUSTARE*/
 {
-	typeChart = 'line';
-	for (var i = 0; i < arrayData.length; i++)
-	{
-		arrayData[i] = [arrayData[i][0]];
-	}
+	currentDataType = POVERTY;
+	
 	for (var i = 0; i < arrayCheckBoxs.length; i++)
 	{
-//		console.log(arrayCheckBoxs[i].input);
+		if (arrayCheckBoxs[i].input[0].checked == true)
+		{
+			var country = arrayCheckBoxs[i].input[0].name;
+			for (var j = 0; j < dataTypes.length; j++)
+			{
+				var index = getPosition(country, dataTypes[j]);
+				if (index != -1)
+				{
+					removeCountryDataType(index, dataTypes[j]);
+				}
+			}
+		}
 		arrayCheckBoxs[i].input[0].checked = false;
 		copyArrayCheckBoxs[i].input[0].checked = false;
 	}
 	
-	$('#regions-selector-panel > label > input').prop('checked', false);
+	for (var i = 0; i < arrayCollapsibleRegions.length; i++)
+	{
+		arrayCollapsibleRegions[i].checkbox.input.prop('checked', false);
+	}
+	
+	var dataTypesElements = document.getElementsByName('dataType');
+	for (var i = 0; i <dataTypesElements.length; i++)
+	{
+		if (dataTypesElements[i].value == POVERTY)
+		{
+			dataTypesElements[i].checked = true;
+		}
+	}
 	
 	$('#analysis-chart').empty();
 	$('#analysis-chart').append('<p>Select country/ies to show on the chart from right menu</p>');
 }
-
-//function selectChart(type)
-//{
-////	console.log(type);
-//	if (typeChart != type)
-//	{
-//		if (type == 'line')
-//		{
-//			typeChart = 'line';
-//			drawChart();
-//		}
-//		else if (type == 'bar')
-//		{
-//			typeChart = 'bar';
-//			drawChart();
-//		}
-//	}
-//}
 
 function searchCountry(input)
 {
