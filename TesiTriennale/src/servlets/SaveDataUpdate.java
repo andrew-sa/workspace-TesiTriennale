@@ -1,6 +1,7 @@
 package servlets;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
@@ -47,6 +48,7 @@ public class SaveDataUpdate extends HttpServlet {
 	public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
 	{
 		response.setContentType("text/html");
+		PrintWriter printWriter = response.getWriter();
 		try
 		{
 			SourceDAO sourceDAO = new SourceDAO();
@@ -55,7 +57,7 @@ public class SaveDataUpdate extends HttpServlet {
 			LoadPovertyData loadPovertyData = new LoadPovertyData();
 			LoadNetMigrationsData loadNetMigrationData = new LoadNetMigrationsData();
 			LoadGDPPerCapitaData loadGDPPerCapitaData = new LoadGDPPerCapitaData();
-			boolean updateExecuted = false;
+//			boolean updateExecuted = false;
 			for (Source s: sources)
 			{
 				String updated = request.getParameter(s.getName() + s.getDataType());
@@ -72,16 +74,16 @@ public class SaveDataUpdate extends HttpServlet {
 								switch (s.getDataType())
 								{
 									case PopulationData.DATA_TYPE:
-										loadPopulationData.loadUSAData();
+										loadPopulationData.loadUSAData(printWriter);
 										break;
 									case PovertyData.DATA_TYPE:
-										loadPovertyData.loadUSAData();
+										loadPovertyData.loadUSAData(printWriter);
 										break;
 									default:
 										break;
 								}
-								sourceDAO.update(s);
-								updateExecuted = true;
+//								sourceDAO.update(s);
+//								updateExecuted = true;
 								break;
 							}
 							case EUDataWrapper.SOURCE:
@@ -89,18 +91,18 @@ public class SaveDataUpdate extends HttpServlet {
 								switch (s.getDataType())
 								{
 									case PopulationData.DATA_TYPE:
-										loadPopulationData.loadEUData();;
+										loadPopulationData.loadEUData(printWriter);
 										break;
 									case PovertyData.DATA_TYPE:
-										loadPovertyData.loadEUData();
+										loadPovertyData.loadEUData(printWriter);
 										break;
 									case NetMigrationData.DATA_TYPE:
-										loadNetMigrationData.loadEUData();
+										loadNetMigrationData.loadEUData(printWriter);
 									default:
 										break;
 								}
-								sourceDAO.update(s);
-								updateExecuted = true;
+//								sourceDAO.update(s);
+//								updateExecuted = true;
 								break;
 							}
 							case WorldBankDataWrapper.SOURCE:
@@ -108,20 +110,20 @@ public class SaveDataUpdate extends HttpServlet {
 								switch (s.getDataType())
 								{
 									case PopulationData.DATA_TYPE:
-										loadPopulationData.loadWorldBankData();;
+										loadPopulationData.loadWorldBankData(printWriter);
 										break;
 									case PovertyData.DATA_TYPE:
-										loadPovertyData.loadWorldBankData();
+										loadPovertyData.loadWorldBankData(printWriter);
 										break;
 									case NetMigrationData.DATA_TYPE:
-										loadNetMigrationData.loadWorldBankData();
+										loadNetMigrationData.loadWorldBankData(printWriter);
 									case GDPPerCapitaData.DATA_TYPE:
-										loadGDPPerCapitaData.loadWorldBankData();
+										loadGDPPerCapitaData.loadWorldBankData(printWriter);
 									default:
 										break;
 								}
-								sourceDAO.update(s);
-								updateExecuted = true;
+//								sourceDAO.update(s);
+//								updateExecuted = true;
 								break;
 							}
 							default:
@@ -130,21 +132,24 @@ public class SaveDataUpdate extends HttpServlet {
 					}
 				}
 			}
-			if (updateExecuted == true)
-			{
-				loadPovertyData.loadRegionsData();
-			}
-			response.getWriter().write("OK");
+//			if (updateExecuted == true)
+//			{
+//				loadPovertyData.loadRegionsData();
+//			}
+			printWriter.println("OK");
+			printWriter.flush();
 		}
 		catch (SQLException e)
 		{
 			e.printStackTrace();
-			response.getWriter().write("ERROR");
+			printWriter.println("ERROR");
+			printWriter.flush();
 		}
 		catch (UnirestException e)
 		{
 			e.printStackTrace();
-			response.getWriter().write("ERROR");
+			printWriter.println("ERROR");
+			printWriter.flush();
 		}
 	}
 

@@ -1,5 +1,6 @@
 package manager.data.dao;
 
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -33,6 +34,36 @@ public class CountryNetMigrationDataDAO {
 			try
 			{
 				LOGGER.info("SAVING: " + nmd);
+				ps.executeUpdate();
+			}
+			catch (MySQLIntegrityConstraintViolationException e)
+			{
+				LOGGER.warning("Unable to save " + nmd + " in the database");
+//				System.err.println("Unable to save the net migration data [" + nmd.getName() + ", " + nmd.getYear() + "] in the database");
+				System.out.println(e.getMessage() + "\n");
+//				e.printStackTrace();
+			}
+			con.commit();
+		}
+		ps.close();
+		DriverManagerConnectionPool.getInstance().releaseConnection(con);
+	}
+	
+	public void save(ArrayList<CountryNetMigrationData> data, PrintWriter printWriter) throws SQLException
+	{
+		Connection con = DriverManagerConnectionPool.getInstance().getConnection();
+		PreparedStatement ps = con.prepareStatement(CREATE);
+		for (CountryNetMigrationData nmd: data)
+		{
+			ps.setString(1, nmd.getName());
+			ps.setString(2, nmd.getYear());
+			ps.setDouble(3, nmd.getValue());
+			ps.setString(4, nmd.getSource());
+			try
+			{
+				LOGGER.info("SAVING: " + nmd);
+				printWriter.println("SAVING: " + nmd);
+				printWriter.flush();
 				ps.executeUpdate();
 			}
 			catch (MySQLIntegrityConstraintViolationException e)

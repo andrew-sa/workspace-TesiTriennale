@@ -1,5 +1,6 @@
 package manager.data.extraction;
 
+import java.io.PrintWriter;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
@@ -312,6 +313,56 @@ public class WorldBankDataWrapper {
 	    return data;
 	}
 	
+	public ArrayList<CountryPopulationData> extractPopulationData(ArrayList<Country> countries, PrintWriter printWriter) throws UnirestException
+	{
+		ArrayList<CountryPopulationData> data = new ArrayList<>();
+		final String restAPI = "https://api.worldbank.org/v2/";
+		final String countrySelector = "countries/";
+		final String dataset = "indicators/SP.POP.TOTL";
+		Map<String, Object> fields = new HashMap<>();
+	    fields.put("format", "json");
+	    for (Country c: countries)
+	    {
+	    	HttpRequest req = Unirest.get(restAPI + countrySelector + c.getCode() + SEPARATOR + dataset).queryString(fields);
+	    	System.out.println(req.getUrl());
+	    	try
+	    	{
+	    		
+	    		LOGGER.info("EXTRACTING: " + c.getCode() + ", " + PopulationData.DATA_TYPE + ", " + WorldBankDataWrapper.SOURCE);
+	    		printWriter.println("EXTRACTING: " + c.getCode() + ", " + PopulationData.DATA_TYPE + ", " + WorldBankDataWrapper.SOURCE);
+	    		printWriter.flush();
+		    	JSONArray result = req.asJson().getBody().getArray();
+		    	int pages = result.getJSONObject(0).getInt("pages");
+		    	for (int i = 1; i <= pages; i++)
+		    	{
+			    	fields.put("page", i);
+			    	req = Unirest.get(restAPI + countrySelector + c.getCode() + SEPARATOR + dataset).queryString(fields);
+			    	JSONArray pageDataArray = req.asJson().getBody().getArray().getJSONArray(1);
+			    	for (int j = 0; j < pageDataArray.length(); j++)
+			    	{
+			    		JSONObject dataObj = pageDataArray.getJSONObject(j);
+			    		if (!"null".equals(dataObj.get("value").toString()))
+			    		{
+			    			String country = dataObj.getJSONObject("country").getString("id");
+			    			String year = dataObj.getString("date");
+			    			double value = Double.valueOf(String.valueOf(dataObj.get("value")));
+			    			System.out.println("[" + country + ", " + year + ", " + value + "]");
+			    			data.add(new CountryPopulationData(country, year, value, SOURCE, false));
+			    			
+			    		}
+			    	}
+			    	fields.remove("page");
+		    	}
+	    	}
+	    	catch (JSONException e)
+	    	{
+	    		LOGGER.warning(PopulationData.DATA_TYPE + " data for country " + c.getCode() + " are not available, from " + WorldBankDataWrapper.SOURCE);
+//	    		System.err.println("Population data for country " + c.getCode() + " are not available");
+	    	}
+	    }
+	    return data;
+	}
+	
 	public ArrayList<CountryPovertyData> extractPovertyData(ArrayList<Country> countries) throws UnirestException
 	{
 		ArrayList<CountryPovertyData> data = new ArrayList<>();
@@ -334,6 +385,73 @@ public class WorldBankDataWrapper {
 		    {
 		    	ArrayList<CountryPovertyData> countryData = new ArrayList<>();
 		    	LOGGER.info("EXTRACTING: " + c.getCode() + ", " + PovertyData.DATA_TYPE + ", " + WorldBankDataWrapper.SOURCE);
+//			    System.out.println(req.asJson().getBody().getArray());
+			    JSONArray result = req.asJson().getBody().getArray();
+			    int pages = result.getJSONObject(0).getInt("pages");
+//			    System.out.println(pages);
+			    for (int i = 1; i <= pages; i++)
+			    {
+			    	fields.put("page", i);
+			    	req = Unirest.get(restAPI + countrySelector + c.getCode() + SEPARATOR + dataset).queryString(fields);
+//			    	System.out.println(req.getUrl());
+			    	JSONArray pageDataArray = req.asJson().getBody().getArray().getJSONArray(1);
+//			    	System.out.println(pageData);
+			    	for (int j = 0; j < pageDataArray.length(); j++)
+			    	{
+			    		JSONObject dataObj = pageDataArray.getJSONObject(j);
+//			    		System.out.println(dataObj);
+//			    		System.out.println(dataObj.get("value"));
+			    		if (!"null".equals(dataObj.get("value").toString()))
+			    		{
+//			    			System.out.println("Hey, i'm here!");
+			    			String country = dataObj.getJSONObject("country").getString("id");
+			    			String year = dataObj.getString("date");
+			    			double value = Double.valueOf(String.valueOf(dataObj.get("value")));
+			    			System.out.println("[" + country + ", " + year + ", " + value + "]");
+//			    			data.add(new CountryPovertyData(country, year, value, SOURCE, false));
+			    			countryData.add(new CountryPovertyData(country, year, value, SOURCE, false));
+			    		}
+			    	}
+			    	fields.remove("page");
+			    }
+			    ArrayList<CountryPovertyData> allCountryData = calculateInterpolatedValus(countryData);
+			    System.out.println("Data WITHOUT interpolated values: " + countryData);
+			    System.out.println("Data WITH interpolated values: " + allCountryData);
+			    data.addAll(allCountryData);
+		    }
+		    catch (JSONException e)
+	    	{
+		    	LOGGER.warning(PovertyData.DATA_TYPE + " data for country " + c.getCode() + " are not available, from " + WorldBankDataWrapper.SOURCE);
+//	    		System.err.println("Povery data for country " + c.getCode() + " are not available");
+	    	}
+	    }
+	    return data;
+	}
+	
+	public ArrayList<CountryPovertyData> extractPovertyData(ArrayList<Country> countries, PrintWriter printWriter) throws UnirestException
+	{
+		ArrayList<CountryPovertyData> data = new ArrayList<>();
+//		final String restAPI = "https://api.worldbank.org/v2/countries/indicators/SI.POV.NAHC";
+		final String restAPI = "https://api.worldbank.org/v2/";
+		final String countrySelector = "countries/";
+		final String dataset = "indicators/SI.POV.NAHC";
+//		final String startDate = "2000";
+//		final String endDate = "2017";
+//		final String queryString = "?date=" + endDate + ":" + startDate;
+//		HttpRequest req = Unirest.get(restAPI + queryString);
+		Map<String, Object> fields = new HashMap<>();
+//	    fields.put("date", LAST_YEAR + ":" + FIRST_YEAR);
+	    fields.put("format", "json");
+	    for (Country c: countries)
+	    {
+	    	HttpRequest req = Unirest.get(restAPI + countrySelector + c.getCode() + SEPARATOR + dataset).queryString(fields);
+		    System.out.println(req.getUrl());
+		    try
+		    {
+		    	ArrayList<CountryPovertyData> countryData = new ArrayList<>();
+		    	LOGGER.info("EXTRACTING: " + c.getCode() + ", " + PovertyData.DATA_TYPE + ", " + WorldBankDataWrapper.SOURCE);
+		    	printWriter.println("EXTRACTING: " + c.getCode() + ", " + PovertyData.DATA_TYPE + ", " + WorldBankDataWrapper.SOURCE);
+		    	printWriter.flush();
 //			    System.out.println(req.asJson().getBody().getArray());
 			    JSONArray result = req.asJson().getBody().getArray();
 			    int pages = result.getJSONObject(0).getInt("pages");
@@ -423,6 +541,54 @@ public class WorldBankDataWrapper {
 	    return data;
 	}
 	
+	public ArrayList<CountryNetMigrationData> extractNetMigrationData(ArrayList<Country> countries, PrintWriter printWriter) throws UnirestException
+	{
+		ArrayList<CountryNetMigrationData> data = new ArrayList<>();
+		final String restAPI = "https://api.worldbank.org/v2/";
+		final String countrySelector = "countries/";
+		final String dataset = "indicators/SM.POP.NETM";
+		Map<String, Object> fields = new HashMap<>();
+	    fields.put("format", "json");
+	    for (Country c: countries)
+	    {
+	    	HttpRequest req = Unirest.get(restAPI + countrySelector + c.getCode() + SEPARATOR + dataset).queryString(fields);
+		    System.out.println(req.getUrl());
+		    try
+		    {
+		    	LOGGER.info("EXTRACTING: " + c.getCode() + ", " + NetMigrationData.DATA_TYPE + ", " + WorldBankDataWrapper.SOURCE);
+		    	printWriter.println("EXTRACTING: " + c.getCode() + ", " + NetMigrationData.DATA_TYPE + ", " + WorldBankDataWrapper.SOURCE);
+		    	printWriter.flush();
+			    JSONArray result = req.asJson().getBody().getArray();
+			    int pages = result.getJSONObject(0).getInt("pages");
+			    for (int i = 1; i <= pages; i++)
+			    {
+			    	fields.put("page", i);
+			    	req = Unirest.get(restAPI + countrySelector + c.getCode() + SEPARATOR + dataset).queryString(fields);
+			    	JSONArray pageDataArray = req.asJson().getBody().getArray().getJSONArray(1);
+			    	for (int j = 0; j < pageDataArray.length(); j++)
+			    	{
+			    		JSONObject dataObj = pageDataArray.getJSONObject(j);
+			    		if (!"null".equals(dataObj.get("value").toString()))
+			    		{
+			    			String country = dataObj.getJSONObject("country").getString("id");
+			    			String year = dataObj.getString("date");
+			    			double value = Double.valueOf(String.valueOf(dataObj.get("value")));
+			    			System.out.println("[" + country + ", " + year + ", " + value + "]");
+			    			data.add(new CountryNetMigrationData(country, year, value, SOURCE));
+			    		}
+			    	}
+			    	fields.remove("page");
+			    }
+	    	}
+		    catch (JSONException e)
+	    	{
+		    	LOGGER.warning(NetMigrationData.DATA_TYPE + " data for country " + c.getCode() + " are not available, from " + WorldBankDataWrapper.SOURCE);
+//	    		System.err.println("Net Migration data for country " + c.getCode() + " are not available");
+	    	}
+	    }
+	    return data;
+	}
+	
 	public ArrayList<CountryGDPPerCapitaData> extractGDPPerCapitaData(ArrayList<Country> countries) throws UnirestException
 	{
 		ArrayList<CountryGDPPerCapitaData> data = new ArrayList<>();
@@ -438,6 +604,54 @@ public class WorldBankDataWrapper {
 		    try
 		    {
 		    	LOGGER.info("EXTRACTING: " + c.getCode() + ", " + GDPPerCapitaData.DATA_TYPE + ", " + WorldBankDataWrapper.SOURCE);
+			    JSONArray result = req.asJson().getBody().getArray();
+			    int pages = result.getJSONObject(0).getInt("pages");
+			    for (int i = 1; i <= pages; i++)
+			    {
+			    	fields.put("page", i);
+			    	req = Unirest.get(restAPI + countrySelector + c.getCode() + SEPARATOR + dataset).queryString(fields);
+			    	JSONArray pageDataArray = req.asJson().getBody().getArray().getJSONArray(1);
+			    	for (int j = 0; j < pageDataArray.length(); j++)
+			    	{
+			    		JSONObject dataObj = pageDataArray.getJSONObject(j);
+			    		if (!"null".equals(dataObj.get("value").toString()))
+			    		{
+			    			String country = dataObj.getJSONObject("country").getString("id");
+			    			String year = dataObj.getString("date");
+			    			double value = Double.valueOf(String.valueOf(dataObj.get("value")));
+			    			System.out.println("[" + country + ", " + year + ", " + value + "]");
+			    			data.add(new CountryGDPPerCapitaData(country, year, value, SOURCE, false));
+			    		}
+			    	}
+			    	fields.remove("page");
+			    }
+		    }
+		    catch (JSONException e)
+	    	{
+		    	LOGGER.warning(GDPPerCapitaData.DATA_TYPE + " data for country " + c.getCode() + " are not available, from " + WorldBankDataWrapper.SOURCE);
+//	    		System.err.println("GDP Per Capita data for country " + c.getCode() + " are not available");
+	    	} 
+	    }
+	    return data;
+	}
+	
+	public ArrayList<CountryGDPPerCapitaData> extractGDPPerCapitaData(ArrayList<Country> countries, PrintWriter printWriter) throws UnirestException
+	{
+		ArrayList<CountryGDPPerCapitaData> data = new ArrayList<>();
+		final String restAPI = "https://api.worldbank.org/v2/";
+		final String countrySelector = "countries/";
+		final String dataset = "indicators/NY.GDP.PCAP.PP.CD";
+		Map<String, Object> fields = new HashMap<>();
+	    fields.put("format", "json");
+	    for (Country c: countries)
+	    {
+	    	HttpRequest req = Unirest.get(restAPI + countrySelector + c.getCode() + SEPARATOR + dataset).queryString(fields);
+		    System.out.println(req.getUrl());
+		    try
+		    {
+		    	LOGGER.info("EXTRACTING: " + c.getCode() + ", " + GDPPerCapitaData.DATA_TYPE + ", " + WorldBankDataWrapper.SOURCE);
+		    	printWriter.println("EXTRACTING: " + c.getCode() + ", " + GDPPerCapitaData.DATA_TYPE + ", " + WorldBankDataWrapper.SOURCE);
+		    	printWriter.flush();
 			    JSONArray result = req.asJson().getBody().getArray();
 			    int pages = result.getJSONObject(0).getInt("pages");
 			    for (int i = 1; i <= pages; i++)

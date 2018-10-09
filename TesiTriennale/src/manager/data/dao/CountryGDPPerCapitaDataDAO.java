@@ -1,5 +1,6 @@
 package manager.data.dao;
 
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -35,6 +36,37 @@ public class CountryGDPPerCapitaDataDAO {
 			try
 			{
 				LOGGER.info("SAVING: " + gdp);
+				ps.executeUpdate();
+			}
+			catch (MySQLIntegrityConstraintViolationException e)
+			{
+				LOGGER.warning("Unable to save " + gdp + " in the database");
+//				System.err.println("Unable to save the GDP per capita data [" + gdp.getName() + ", " + gdp.getYear() + "] in the database");
+				System.out.println(e.getMessage() + "\n");
+//				e.printStackTrace();
+			}
+			con.commit();
+		}
+		ps.close();
+		DriverManagerConnectionPool.getInstance().releaseConnection(con);
+	}
+	
+	public void save(ArrayList<CountryGDPPerCapitaData> data, PrintWriter printWriter) throws SQLException
+	{
+		Connection con = DriverManagerConnectionPool.getInstance().getConnection();
+		PreparedStatement ps = con.prepareStatement(CREATE);
+		for (CountryGDPPerCapitaData gdp: data)
+		{
+			ps.setString(1, gdp.getName());
+			ps.setString(2, gdp.getYear());
+			ps.setDouble(3, gdp.getValue());
+			ps.setString(4, gdp.getSource());
+			ps.setBoolean(5, gdp.isCalculated());
+			try
+			{
+				LOGGER.info("SAVING: " + gdp);
+				printWriter.println("SAVING: " + gdp);
+				printWriter.flush();
 				ps.executeUpdate();
 			}
 			catch (MySQLIntegrityConstraintViolationException e)

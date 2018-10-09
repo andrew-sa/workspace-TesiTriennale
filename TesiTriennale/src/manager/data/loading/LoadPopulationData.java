@@ -1,5 +1,6 @@
 package manager.data.loading;
 
+import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
@@ -32,6 +33,22 @@ public class LoadPopulationData {
 		updateSourceDate(USADataWrapper.SOURCE);
 	}
 	
+	public void loadUSAData(PrintWriter printWriter) throws UnirestException, SQLException
+	{
+		USADataWrapper wrapper = new USADataWrapper();
+		ArrayList<CountryPopulationData> data = wrapper.extractPopulationData(printWriter);
+		
+		printWriter.println("DELETING (previuos): " + PopulationData.DATA_TYPE + ", " + USADataWrapper.SOURCE);
+		printWriter.flush();
+		deleteDataOnDB(USADataWrapper.SOURCE);
+		
+//		printWriter.println("SAVING (all): " + PopulationData.DATA_TYPE + ", " + USADataWrapper.SOURCE);
+//		printWriter.flush();
+		saveDataOnDB(data, printWriter);
+		
+		updateSourceDate(USADataWrapper.SOURCE);
+	}
+	
 	public void loadEUData() throws UnirestException, SQLException
 	{
 		EUDataWrapper wrapper = new EUDataWrapper();
@@ -40,6 +57,24 @@ public class LoadPopulationData {
 		data = trasformer.correctCountriesCodesPopulationData(data);
 		deleteDataOnDB(EUDataWrapper.SOURCE);
 		saveDataOnDB(data);
+		updateSourceDate(EUDataWrapper.SOURCE);
+	}
+	
+	public void loadEUData(PrintWriter printWriter) throws UnirestException, SQLException
+	{
+		EUDataWrapper wrapper = new EUDataWrapper();
+		ArrayList<CountryPopulationData> data = wrapper.extractPopulationData(printWriter);
+		EUDataTrasformer trasformer = new EUDataTrasformer();
+		data = trasformer.correctCountriesCodesPopulationData(data);
+		
+		printWriter.println("DELETING (previuos): " + PopulationData.DATA_TYPE + ", " + EUDataWrapper.SOURCE);
+		printWriter.flush();
+		deleteDataOnDB(EUDataWrapper.SOURCE);
+		
+//		printWriter.println("SAVING (all): " + PopulationData.DATA_TYPE + ", " + EUDataWrapper.SOURCE);
+//		printWriter.flush();
+		saveDataOnDB(data, printWriter);
+		
 		updateSourceDate(EUDataWrapper.SOURCE);
 	}
 	
@@ -54,6 +89,24 @@ public class LoadPopulationData {
 		updateSourceDate(WorldBankDataWrapper.SOURCE);
 	}
 	
+	public void loadWorldBankData(PrintWriter printWriter) throws UnirestException, SQLException
+	{
+		CountryDAO countryDAO = new CountryDAO();
+		ArrayList<Country> countries = countryDAO.readCountryForWorldBankOfADataType(PopulationData.DATA_TYPE);
+		WorldBankDataWrapper wrapper = new WorldBankDataWrapper();
+		ArrayList<CountryPopulationData> data = wrapper.extractPopulationData(countries, printWriter);
+		
+		printWriter.println("DELETING (previuos): " + PopulationData.DATA_TYPE + ", " + WorldBankDataWrapper.SOURCE);
+		printWriter.flush();
+		deleteDataOnDB(WorldBankDataWrapper.SOURCE);
+		
+//		printWriter.println("SAVING (all): " + PopulationData.DATA_TYPE + ", " + WorldBankDataWrapper.SOURCE);
+//		printWriter.flush();
+		saveDataOnDB(data, printWriter);
+		
+		updateSourceDate(WorldBankDataWrapper.SOURCE);
+	}
+	
 	public void loadBoundaryValues() throws SQLException
 	{
 		BoundaryValueDAO boundaryValueDAO = new BoundaryValueDAO();
@@ -65,6 +118,12 @@ public class LoadPopulationData {
 	{
 		CountryPopulationDataDAO populationDataDAO = new CountryPopulationDataDAO();
 		populationDataDAO.save(data);
+	}
+	
+	private void saveDataOnDB(ArrayList<CountryPopulationData> data, PrintWriter printWriter) throws SQLException
+	{
+		CountryPopulationDataDAO populationDataDAO = new CountryPopulationDataDAO();
+		populationDataDAO.save(data, printWriter);
 	}
 	
 	private void deleteDataOnDB(String source) throws SQLException

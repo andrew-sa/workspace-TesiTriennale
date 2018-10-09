@@ -91,9 +91,22 @@ function closeModalUpdate()
 
 function showUpdateResult()
 {
-	if (xhttp.readyState == 4 && xhttp.status == 200)
+	if (xhttp.readyState == 3)
 	{
+		$('#updating-msg').show();
+		$('#updating-msg').empty();
+		var response = xhttp.responseText;
+		var msg = response.split('\n');
+//		console.log(msg[msg.length - 2].trim());
+		$('#updating-msg').html(msg[msg.length - 2].trim());
+	}
+	else if (xhttp.readyState == 4 && xhttp.status == 200)
+	{
+		$('#updating-msg').hide();
+		$('#updating-msg').empty();
 		var responseSTR = xhttp.responseText;
+		var msg = responseSTR.split('\n');
+		responseSTR = msg[msg.length - 2].trim();
 		if (responseSTR == 'OK')
 		{
 			$('#update-btn').hide();
@@ -130,6 +143,7 @@ function checkUpdate(form)
 	$('.source-btn').css('cursor', 'wait');
 	xhttp = new XMLHttpRequest();
 	xhttp.open("get", "update_data" + queryString, true);
+//	xhttp.open("get", "test_processing_response" + queryString, true);
 	xhttp.setRequestHeader("connection", "close");
 	xhttp.onreadystatechange = showUpdateResult;
 	xhttp.send(null);

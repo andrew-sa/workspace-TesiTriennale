@@ -1,5 +1,6 @@
 package manager.data.dao;
 
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -35,6 +36,37 @@ public class CountryPovertyDataDAO {
 			try
 			{
 				LOGGER.info("SAVING: " + pd);
+				ps.executeUpdate();
+			}
+			catch (MySQLIntegrityConstraintViolationException e)
+			{
+				LOGGER.warning("Unable to save " + pd + " in the database");
+//				System.err.println("Unable to save the poverty data [" + pd.getName() + ", " + pd.getYear() + "] in the database");
+				System.out.println(e.getMessage() + "\n");
+//				e.printStackTrace();
+			}
+			con.commit();
+		}
+		ps.close();
+		DriverManagerConnectionPool.getInstance().releaseConnection(con);
+	}
+	
+	public void save(ArrayList<CountryPovertyData> data, PrintWriter printWriter) throws SQLException
+	{
+		Connection con = DriverManagerConnectionPool.getInstance().getConnection();
+		PreparedStatement ps = con.prepareStatement(CREATE);
+		for (CountryPovertyData pd: data)
+		{
+			ps.setString(1, pd.getName());
+			ps.setString(2, pd.getYear());
+			ps.setDouble(3, pd.getValue());
+			ps.setString(4, pd.getSource());
+			ps.setBoolean(5, pd.isCalculated());
+			try
+			{
+				LOGGER.info("SAVING: " + pd);
+				printWriter.println("SAVING: " + pd);
+				printWriter.flush();
 				ps.executeUpdate();
 			}
 			catch (MySQLIntegrityConstraintViolationException e)

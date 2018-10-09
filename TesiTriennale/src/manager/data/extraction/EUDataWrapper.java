@@ -1,5 +1,6 @@
 package manager.data.extraction;
 
+import java.io.PrintWriter;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
@@ -78,6 +79,58 @@ public class EUDataWrapper {
 		
 		return data;
 	}
+	
+	public ArrayList<CountryPopulationData> extractPopulationData(PrintWriter printWriter) throws UnirestException
+	{
+		ArrayList<CountryPopulationData> data = new ArrayList<>();
+		
+		final String restAPI = "http://ec.europa.eu/eurostat/wdds/rest/data/v2.1/json/en/";
+		final String dataset = "demo_pjan";
+		Map<String, Object> fields = new HashMap<>();
+		fields.put("unit", "NR");
+	    fields.put("sex", "T");
+	    fields.put("age", "TOTAL");
+	    fields.put("filterNonGeo", 1);
+	    HttpRequest req = Unirest.get(restAPI + dataset).queryString(fields);
+		System.out.println(req.getUrl());
+		JSONObject resultObj = req.asJson().getBody().getObject();
+		final int yearsSize = Integer.parseInt(resultObj.query("/size/4").toString());
+//		System.out.println(yearsSize);
+		JSONObject countries = (JSONObject) resultObj.query("/dimension/geo/category/index");
+//		System.out.println(countries);
+		JSONObject years = (JSONObject) resultObj.query("/dimension/time/category/index");
+//		System.out.println(years);
+		Iterator<String> c = countries.keys();
+//		System.out.println();
+		while (c.hasNext())
+		{
+			String countryCode = c.next();
+			LOGGER.info("EXTRACTING: " + countryCode + ", " + PopulationData.DATA_TYPE + ", " + EUDataWrapper.SOURCE);
+			printWriter.println("EXTRACTING: " + countryCode + ", " + PopulationData.DATA_TYPE + ", " + EUDataWrapper.SOURCE);
+			printWriter.flush();
+//			System.out.println(countryCode);
+			int countryNumber = countries.getInt(countryCode);
+//			System.out.println(countryNumber);
+			Iterator<String> y = years.keys();
+			while (y.hasNext())
+			{
+				String year = y.next();
+//				System.out.println(year);
+				int yearNumber = years.getInt(year);
+//				System.out.println(yearNumber);
+//				System.out.println("Value position: " + (countryNumber * yearsSize + yearNumber));
+				if (resultObj.query("/value/" + (countryNumber * yearsSize + yearNumber)) != null)
+				{
+					Float value = Float.valueOf(resultObj.query("/value/" + (countryNumber * yearsSize + yearNumber)).toString());
+					System.out.println("[" + countryCode + ", " + year + ", " + value + "]");
+					data.add(new CountryPopulationData(countryCode, year, value, SOURCE, false));
+				}
+			}
+//			System.out.println();
+		}
+		
+		return data;
+	}
 
 	public ArrayList<CountryPovertyData> extractPovertyData() throws UnirestException
 	{
@@ -110,6 +163,67 @@ public class EUDataWrapper {
 			ArrayList<CountryPovertyData> countryData = new ArrayList<>();
 			String countryCode = c.next();
 			LOGGER.info("EXTRACTING: " + countryCode + ", " + PovertyData.DATA_TYPE + ", " + EUDataWrapper.SOURCE);
+//			System.out.println(countryCode);
+			int countryNumber = countries.getInt(countryCode);
+//			System.out.println(countryNumber);
+			Iterator<String> y = years.keys();
+			while (y.hasNext())
+			{
+				String year = y.next();
+//				System.out.println(year);
+				int yearNumber = years.getInt(year);
+//				System.out.println(yearNumber);
+//				System.out.println("Value position: " + (countryNumber * yearsSize + yearNumber));
+				if (resultObj.query("/value/" + (countryNumber * yearsSize + yearNumber)) != null)
+				{
+					double value = Double.valueOf(resultObj.query("/value/" + (countryNumber * yearsSize + yearNumber)).toString());
+					System.out.println("[" + countryCode + ", " + year + ", " + value + "]");
+//					data.add(new CountryPovertyData(countryCode, year, value, SOURCE, false));
+					countryData.add(new CountryPovertyData(countryCode, year, value, SOURCE, false));
+				}
+			}
+//			System.out.println();
+		  ArrayList<CountryPovertyData> allCountryData = calculateInterpolatedValus(countryData);
+		  System.out.println("Data WITHOUT interpolated values: " + countryData);
+		  System.out.println("Data WITH interpolated values: " + allCountryData);
+		  data.addAll(allCountryData);
+		}
+		return data;
+	}
+	
+	public ArrayList<CountryPovertyData> extractPovertyData(PrintWriter printWriter) throws UnirestException
+	{
+		ArrayList<CountryPovertyData> data = new ArrayList<>();
+		final String restAPI = "http://ec.europa.eu/eurostat/wdds/rest/data/v2.1/json/en/";
+		final String dataset = "ilc_li02";
+		Map<String, Object> fields = new HashMap<>();
+		fields.put("indic_il", "LI_R_MD50");
+	    fields.put("sex", "T");
+	    fields.put("precision", 1);
+//	    fields.put("sinceTimePeriod", 2000);
+	    fields.put("unit", "PC");
+	    fields.put("age", "TOTAL");
+	    fields.put("filterNonGeo", 1);
+	    fields.put("shortLabel", 1);
+	    fields.put("unitLabel", "code");
+		HttpRequest req = Unirest.get(restAPI + dataset).queryString(fields);
+		System.out.println(req.getUrl());
+		JSONObject resultObj = req.asJson().getBody().getObject();
+		final int yearsSize = Integer.parseInt(resultObj.query("/size/5").toString());
+//		System.out.println(yearsSize);
+		JSONObject countries = (JSONObject) resultObj.query("/dimension/geo/category/index");
+//		System.out.println(countries);
+		JSONObject years = (JSONObject) resultObj.query("/dimension/time/category/index");
+//		System.out.println(years);
+		Iterator<String> c = countries.keys();
+//		System.out.println();
+		while (c.hasNext())
+		{
+			ArrayList<CountryPovertyData> countryData = new ArrayList<>();
+			String countryCode = c.next();
+			LOGGER.info("EXTRACTING: " + countryCode + ", " + PovertyData.DATA_TYPE + ", " + EUDataWrapper.SOURCE);
+			printWriter.println("EXTRACTING: " + countryCode + ", " + PovertyData.DATA_TYPE + ", " + EUDataWrapper.SOURCE);
+			printWriter.flush();
 //			System.out.println(countryCode);
 			int countryNumber = countries.getInt(countryCode);
 //			System.out.println(countryNumber);
@@ -217,6 +331,36 @@ public class EUDataWrapper {
 	public ArrayList<CountryNetMigrationData> extractNetMigrationData() throws UnirestException
 	{
 		LOGGER.info("EXTRACTING: " + "All EU countries" + ", " + NetMigrationData.DATA_TYPE + ", " + EUDataWrapper.SOURCE);
+		ArrayList<CountryNetMigrationData> netMigrationData = new ArrayList<>();
+		ArrayList<CountryNetMigrationData> immigrationData = extractImmigrationData();
+		ArrayList<CountryNetMigrationData> emigrationData = extractEmigrationData();
+		for (CountryNetMigrationData id: immigrationData)
+		{
+			boolean found = false;
+			int i = 0;
+			while (!found && i < emigrationData.size())
+			{
+				CountryNetMigrationData ed = emigrationData.get(i);
+				if (id.equals(ed))
+				{
+					found = true;
+//					float population = extractPopulationData(id.getName(), id.getYear());
+					double netMigrationValue = id.getValue() - ed.getValue();
+//					System.out.println("[" + id.getName() + ", " + id.getYear() + ", " + netMigrationValue + "]");
+					netMigrationData.add(new CountryNetMigrationData(id.getName(), id.getYear(), netMigrationValue, EUDataWrapper.SOURCE));
+				}
+				i++;
+			}
+		}
+//		System.out.println(netMigrationData);
+		return netMigrationData;
+	}
+	
+	public ArrayList<CountryNetMigrationData> extractNetMigrationData(PrintWriter printWriter) throws UnirestException
+	{
+		LOGGER.info("EXTRACTING: " + "All EU countries" + ", " + NetMigrationData.DATA_TYPE + ", " + EUDataWrapper.SOURCE);
+		printWriter.println("EXTRACTING: " + "All EU countries" + ", " + NetMigrationData.DATA_TYPE + ", " + EUDataWrapper.SOURCE);
+		printWriter.flush();
 		ArrayList<CountryNetMigrationData> netMigrationData = new ArrayList<>();
 		ArrayList<CountryNetMigrationData> immigrationData = extractImmigrationData();
 		ArrayList<CountryNetMigrationData> emigrationData = extractEmigrationData();
