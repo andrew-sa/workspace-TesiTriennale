@@ -2,8 +2,12 @@ package manager.data.model;
 
 public class CountryGDPPerCapitaData extends Data implements GDPPerCapitaData {
 
-public CountryGDPPerCapitaData() {
-		
+	public CountryGDPPerCapitaData() {
+			
+		}
+	
+	public CountryGDPPerCapitaData(String name, String year) {
+		super(name, year);
 	}
 
 	public CountryGDPPerCapitaData(String name, String year, double value) {

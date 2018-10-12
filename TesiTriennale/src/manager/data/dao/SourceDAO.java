@@ -96,9 +96,9 @@ public class SourceDAO {
 //		System.out.println(new Date((new GregorianCalendar()).getTimeInMillis()));
 //	}
 	
-	private static final String READ = "SELECT * FROM source";
-	private static final String READ_NAMES = "SELECT DISTINCT Name FROM source";
-	private static final String READ_DATA_TYPES = "SELECT DISTINCT DataType FROM source";
+	private static final String READ = "SELECT * FROM source WHERE Name != 'none'";
+	private static final String READ_NAMES = "SELECT DISTINCT Name FROM source WHERE Name != 'none'";
+	private static final String READ_DATA_TYPES = "SELECT DISTINCT DataType FROM source WHERE Name != 'none'";
 	private static final String UPDATE = "UPDATE source SET LastUpdate = ? WHERE Name = ? AND DataType = ?";
 
 }

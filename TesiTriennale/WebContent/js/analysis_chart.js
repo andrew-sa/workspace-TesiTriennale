@@ -390,19 +390,19 @@ function showYears()
 			povertyAnalysisChart.arrayData.push(['Year']);
 			for (var i = responseOBJ.poverty; i <= lastYear; i++)
 			{
-				povertyAnalysisChart.arrayData.push([new Date(i, 11, 31)]);
+				povertyAnalysisChart.arrayData.push([new Date(i, 0, 1)]);
 			}
 			
 			netMigrationAnalysisChart.arrayData.push(['Year']);
 			for (var i = responseOBJ.netmigration; i <= lastYear; i++)
 			{
-				netMigrationAnalysisChart.arrayData.push([new Date(i, 11, 31)]);
+				netMigrationAnalysisChart.arrayData.push([new Date(i, 0, 1)]);
 			}
 			
 			gdpPerCapitaAnalysisChart.arrayData.push(['Year']);
 			for (var i = responseOBJ.gdppercapita; i <= lastYear; i++)
 			{
-				gdpPerCapitaAnalysisChart.arrayData.push([new Date(i, 11, 31)]);
+				gdpPerCapitaAnalysisChart.arrayData.push([new Date(i, 0, 1)]);
 			}
 			
 			loadInitialChart();

@@ -234,6 +234,96 @@ nav a:last-child
 	color: #cd3e3e;
 }
 
+div.separator
+{
+	margin: 0.3em 1em 0.3em 1em;
+	padding: 0em;
+	border: none;
+	border-top: 1px solid #777;
+}
+
+/* INSERTION FORM */
+#insertion-form .container, #deleting-form .container
+{
+	margin-top: 0;
+}
+
+#insertion-form textarea
+{
+	width: 100%;
+	height: 12em;
+	padding: 0.5em;
+	box-sizing: border-box;
+	border: 0.3em solid #ccc;
+	border-radius: 0.3em;
+	background-color: #f8f8f8;
+	resize: none;
+	margin: 1em 0em 0.5em 0em;
+}
+
+#insertion-explanation
+{
+	position: relative;
+	padding: 0.5em 0.3em 0.5em 0.3em;
+	color: #333333;
+	text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.5);
+	text-align: center;
+	background-color: #CCDDBB;
+	border: 1px solid #C6D4AA;
+	z-index: 3;
+}
+
+#insertion-log-container .title, #deleting-form-container .title, #deleting-log-container .title
+{
+	padding: 0.5em 0.3em 0.5em 0.3em;
+	color: #333333;
+	text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.5);
+	text-align: center;
+	background-color: #CCDDBB;
+	border: 1px solid #C6D4AA;
+}
+
+#insertion-explanation > .background
+{
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	z-index: 2;
+	overflow: hidden;
+	text-align: left;
+}
+
+#insertion-explanation > .background > i
+{
+	margin: 0.18em;
+}
+
+/* DELETING-FORM */
+#checkbox-data-container
+{
+	height: 12em;
+	overflow-y: auto;
+	padding: 0.5em 0.3em 0.5em 0.3em;
+	color: #ffffff;
+	text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.5);
+	margin-top: 0.4em;
+	background-color: #777;
+	border: 1px solid #555;
+}
+
+#checkbox-data-container > .single-data-container
+{
+	display: flex;
+	padding: 0.3em;
+}
+
+#checkbox-data-container > .single-data-container > label
+{
+	margin-left: 0.2em;
+}
+
 /* MESSAGE */
 .msg
 {
@@ -256,7 +346,7 @@ nav a:last-child
 	border: 1px solid #C6D4AA;
 }
 
-.updating-msg
+.updating-msg, .insertion-msg
 {
 	display: none;
 	padding: 0.5em 0.3em 0.5em 0.3em;
@@ -266,6 +356,12 @@ nav a:last-child
 	text-align: center;
 	background-color: #777;
 	border: 1px solid #555;
+}
+
+#insertion-log, #deleting-log
+{
+	display: block;
+	text-align: left;
 }
 
 /* CHART OPTIONS */

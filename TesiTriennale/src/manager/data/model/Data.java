@@ -6,6 +6,11 @@ public abstract class Data {
 		// TODO Auto-generated constructor stub
 	}
 	
+	public Data(String name, String year) {
+		this.name = name;
+		this.year = year;
+	}
+	
 	public Data(String name, String year, double value) {
 		this.name = name;
 		this.year = year;
@@ -29,6 +34,11 @@ public abstract class Data {
 	public String toString()
 	{
 		return getClass().getName() + "[name=" + name + ", year=" + year + ", value=" + value + "]";
+	}
+	
+	public String shortToString()
+	{
+		return getClass().getName() + "[name=" + name + ", year=" + year + "]";
 	}
 
 	/**

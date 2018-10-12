@@ -5,6 +5,10 @@ public class CountryNetMigrationData extends Data implements NetMigrationData {
 	public CountryNetMigrationData() {
 		
 	}
+	
+	public CountryNetMigrationData(String name, String year) {
+		super(name, year);
+	}
 
 	public CountryNetMigrationData(String name, String year, double value) {
 		super(name, year, value);

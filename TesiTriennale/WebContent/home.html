@@ -18,7 +18,7 @@
 		<a class="active" href="home.html"><i class="fa fa-fw fa-globe"></i> Geo Map</a>
 		<a href="analysis.html"><i class="fa fa-fw fa-chart-line"></i> Analysis year by year</a>
 		<a href="animated_analysis.html"><i class="fa fa-fw fa-chart-bar"></i> Animated Poverty Analysis</a>
-		<a href="javascript:void(0)" onclick="showModalUpdate()">Check data update <i class="fa fa-fw fa-edit"></i></a>
+		<a href="javascript:void(0)" onclick="showModalUpdate()">Admin Actions <i class="fa fa-fw fa-edit"></i></a>
 	</nav>
 	
 	<div id="modal-update">
@@ -32,15 +32,60 @@
 			<div class="container">
 				<input type="password" placeholder="Enter Password" name="psw" required>
 				
-				<button id="psw-btn" type="submit" onclick="checkPassword(this.form)">Send</button>
+				<button id="psw-btn" class="pointer-btn" type="submit" onclick="checkPassword(this.form)">Send</button>
 			</div>
 		</form>
 		
 		<form id="update-form" class="modal-update-content animate" action="javascript:void(0)">
 			<div class="container">
 				<div id="updating-msg" class="updating-msg"></div>
-				<button id="update-btn" type="submit" onclick="checkUpdate(this.form)">Update</button>
-				<button id="close-btn" type="button" onclick="closeModalUpdate()">Close</button>
+				<button id="update-btn" class="pointer-btn" type="submit" onclick="checkUpdate(this.form)">Update</button>
+				<button id="close-btn" class="pointer-btn" type="button" onclick="closeModalUpdate()">Close</button>
+				<div class="separator"></div>
+				<button id="insertion-btn" class="pointer-btn" type="button" onclick="showModalInsertion()">Manual Insertion</button>
+				<button class="pointer-btn" type="button" onclick="showModalDeleting()">Manual Deleting</button>
+			</div>
+		</form>
+		
+		<form id="insertion-form" class="modal-update-content animate" action="javascript:void(0)">
+			<div id="insertion-form-container" class="container">
+				<div id="insertion-explanation">
+				<div class="background"><i class="fas fa-info-circle fa-5x"></i></div>
+				The data must be in the form: <b>COUNTRY-CODE, DATA-TYPE, YEAR, VALUE</b><br /><br />
+				<b>DATA-TYPE are: population, poverty, netmigration, gdppercapita</b><br /><br />
+				If you want, you can insert more than one item, dividing them by starting a new line</div>
+				<textarea name="textarea" placeholder="Insert data here..."></textarea>
+				<div id="insertion-msg" class="insertion-msg"></div>
+				<button id="submit-insertion-btn" class="pointer-btn" type="submit" onclick="saveDataInserted(this.form)">Save data</button>
+				<div class="separator"></div>
+				<button class="pointer-btn" type="button" onclick="showModalDeleting()">Manual Deleting</button>
+				<button id="close-insertion-btn" class="pointer-btn" type="button" onclick="closeModalUpdate()">Close</button>
+			</div>
+			<div id="insertion-log-container" class="container">
+				<div class="title">MANUAL INSERTION LOGS</div>
+				<div id="insertion-log" class="insertion-msg"></div>
+				<button type="button" class="pointer-btn" onclick="showModalInsertion()">Back</button>
+				<div class="separator"></div>
+				<button type="button" class="pointer-btn" onclick="closeModalUpdate()">Close</button>
+			</div>
+		</form>
+		
+		<form id="deleting-form" class="modal-update-content animate" action="javascript:void(0)">
+			<div id="deleting-form-container" class="container">
+				<div class="title">DELETING DATA</div>
+				<div id="checkbox-data-container"></div>
+				<button id="submit-deleting-btn" class="pointer-btn" type="submit" onclick="deleteSelectData(this.form)">Delete data</button>
+				<button id="refresh-deleting-btn" class="pointer-btn" type="submit" onclick="loadInsertedData();">Refresh</button>
+				<div class="separator"></div>
+				<button class="pointer-btn" type="button" onclick="showModalInsertion()">Manual Insertion</button>
+				<button class="pointer-btn" type="button" onclick="closeModalUpdate()">Close</button>
+			</div>
+			<div id="deleting-log-container" class="container">
+				<div class="title">MANUAL DELETING LOGS</div>
+				<div id="deleting-log" class="insertion-msg"></div>
+				<button type="button" onclick="showModalDeleting()">Back</button>
+				<div class="separator"></div>
+				<button type="button" onclick="closeModalUpdate()">Close</button>
 			</div>
 		</form>
 	</div>

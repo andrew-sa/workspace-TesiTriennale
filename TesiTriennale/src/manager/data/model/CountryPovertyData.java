@@ -5,6 +5,10 @@ public class CountryPovertyData extends Data implements PovertyData {
 	public CountryPovertyData() {
 		super();
 	}
+	
+	public CountryPovertyData(String name, String year) {
+		super(name, year);
+	}
 
 	public CountryPovertyData(String country, String year, double value) {
 		super(country, year, value);

@@ -238,7 +238,7 @@ function createArrayData(labels)
 	var arrayData = [labels];
 	for (var year = firstYear; year <= lastYear; year++)
 	{
-		arrayData.push([new Date(year, 11, 31)]);
+		arrayData.push([new Date(year, 0, 1)]);
 	}
 	return arrayData;
 }

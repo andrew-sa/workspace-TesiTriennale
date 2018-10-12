@@ -111,6 +111,10 @@ public class LoadAdminActions extends HttpServlet {
 			{
 				e.printStackTrace();
 			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
 		}
 		response.getWriter().write(result.toString());
 //		System.out.println(result.toString());

@@ -15,6 +15,7 @@ import exceptions.TupleNotFoundException;
 import manager.connection.DriverManagerConnectionPool;
 import manager.data.model.Country;
 import manager.data.model.CountryPovertyData;
+import servlets.SaveDataManualInsertion;
 
 public class CountryPovertyDataDAO {
 
@@ -79,6 +80,116 @@ public class CountryPovertyDataDAO {
 			con.commit();
 		}
 		ps.close();
+		DriverManagerConnectionPool.getInstance().releaseConnection(con);
+	}
+	
+	public void saveManualInsertion(CountryPovertyData data, PrintWriter printWriter) throws SQLException
+	{
+		LOGGER.info("SAVING: " + data);
+		printWriter.print("SAVING: " + data);
+		printWriter.print("<br>");
+		
+		Connection con = DriverManagerConnectionPool.getInstance().getConnection();
+		PreparedStatement ps = con.prepareStatement(READ_SOURCE_BY_COUNTRY_AND_YEAR);
+		ps.setString(1, data.getName());
+		ps.setString(2, data.getYear());
+		ResultSet rs = ps.executeQuery();
+		if (rs.next())
+		{
+			String source = rs.getString(1);
+			if (source.equals(SaveDataManualInsertion.SOURCE))
+			{
+				con.commit();
+				rs.close();
+				ps.close();
+				
+				ps = con.prepareStatement(UPDATE);
+				ps.setDouble(1, data.getValue());
+				ps.setString(2, data.getName());
+				ps.setString(3, data.getYear());
+				
+				try
+				{
+					int result = ps.executeUpdate();
+					if (result == 0)
+					{
+						LOGGER.warning("Unable to update " + data + " in the database");
+						printWriter.print("DATA NOT UPDATED");
+						printWriter.print("<br>");
+						printWriter.flush();
+					}
+					else
+					{
+						LOGGER.info("Updated " + data + " in the database");
+						printWriter.print("DATA UPDATED");
+						printWriter.print("<br>");
+						printWriter.flush();
+					}
+				}
+				catch (MySQLIntegrityConstraintViolationException e)
+				{
+					LOGGER.warning("Invalid country for: " + data);
+					printWriter.print("SAVE FAILED BECAUSE THE COUNTRY-CODE IS NOT VALID");
+					printWriter.print("<br>");
+					printWriter.flush();
+				}
+				
+				con.commit();
+				ps.close();
+			}
+			else
+			{
+				con.commit();
+				rs.close();
+				ps.close();
+				
+				LOGGER.warning("Unable to update " + data + " in the database because DATA FROM A DIFFERENT SOURCE CAN NOT BE MANUALLY UPDATED");
+				printWriter.print("DATA FROM A DIFFERENT SOURCE CAN NOT BE MANUALLY UPDATED");
+				printWriter.print("<br>");
+				printWriter.flush();
+			}
+		}
+		else
+		{
+			con.commit();
+			rs.close();
+			ps.close();
+			
+			ps = con.prepareStatement(CREATE);
+			ps.setString(1, data.getName());
+			ps.setString(2, data.getYear());
+			ps.setDouble(3, data.getValue());
+			ps.setString(4, data.getSource());
+			ps.setBoolean(5, data.isCalculated());
+			
+			try
+			{
+				int result = ps.executeUpdate();
+				if (result == 0)
+				{
+					LOGGER.warning("Unable to save " + data + " in the database");
+					printWriter.print("DATA NOT SAVED");
+					printWriter.print("<br>");
+					printWriter.flush();
+				}
+				else
+				{
+					LOGGER.warning("Saved " + data + " in the database");
+					printWriter.print("DATA SAVED");
+					printWriter.print("<br>");
+					printWriter.flush();
+				}
+			}
+			catch (MySQLIntegrityConstraintViolationException e)
+			{
+				LOGGER.warning("Invalid country for: " + data);
+				printWriter.print("SAVE FAILED BECAUSE THE COUNTRY-CODE IS NOT VALID");
+				printWriter.print("<br>");
+				printWriter.flush();
+			}
+			con.commit();
+			ps.close();
+		}
 		DriverManagerConnectionPool.getInstance().releaseConnection(con);
 	}
 	
@@ -258,6 +369,22 @@ public class CountryPovertyDataDAO {
 		return year;
 	}
 	
+	public ArrayList<CountryPovertyData> readManualInsertions() throws SQLException
+	{
+		ArrayList<CountryPovertyData> data = new ArrayList<>();
+		Connection con = DriverManagerConnectionPool.getInstance().getConnection();
+		Statement stm = con.createStatement();
+		ResultSet rs = stm.executeQuery(READ_MANUAL_INSERTIONS);
+		while (rs.next())
+		{
+			data.add(new CountryPovertyData(rs.getString(1), rs.getString(2), rs.getDouble(3)));
+		}
+		con.commit();
+		rs.close();
+		DriverManagerConnectionPool.getInstance().releaseConnection(con);
+		return data;
+	}
+	
 	public void delete(String source) throws SQLException
 	{
 		Connection con = DriverManagerConnectionPool.getInstance().getConnection();
@@ -269,15 +396,47 @@ public class CountryPovertyDataDAO {
 		DriverManagerConnectionPool.getInstance().releaseConnection(con);
 	}
 	
-	public static void main(String[] args) throws SQLException {
-		CountryPovertyDataDAO dao = new CountryPovertyDataDAO();
-		System.out.println(dao.readFirstYear());
+	public void delete(CountryPovertyData data, PrintWriter printWriter) throws SQLException
+	{
+		LOGGER.info("DELETING: " + data.shortToString());
+		printWriter.print("DELETING: " + data.shortToString());
+		printWriter.print("<br>");
+		
+		Connection con = DriverManagerConnectionPool.getInstance().getConnection();
+		PreparedStatement ps = con.prepareStatement(DELETE_INSERTED_DATA);
+		ps.setString(1, data.getName());
+		ps.setString(2, data.getYear());
+		int result = ps.executeUpdate();
+		if (result == 1)
+		{
+			LOGGER.info("Deleted " + data.shortToString() + " in the database");
+			printWriter.print("DATA DELETED");
+			printWriter.print("<br>");
+			printWriter.flush();
+		}
+		else
+		{
+			LOGGER.warning("Unable to delete " + data.shortToString() + " in the database");
+			printWriter.print("DATA NOT DELETED");
+			printWriter.print("<br>");
+			printWriter.flush();
+		}
+		con.commit();
+		ps.close();
+		DriverManagerConnectionPool.getInstance().releaseConnection(con);
 	}
+	
+//	public static void main(String[] args) throws SQLException {
+//		CountryPovertyDataDAO dao = new CountryPovertyDataDAO();
+//		System.out.println(dao.readFirstYear());
+//	}
 	
 //	private static final Logger LOGGER = Logger.getLogger(PovertyData.DATA_TYPE);
 	private static final Logger LOGGER = Logger.getLogger("updating");
 	
 	private static final String CREATE = "INSERT INTO countrypoverty VALUES (?, ?, ?, ?, ?)";
+	private static final String READ_SOURCE_BY_COUNTRY_AND_YEAR = "SELECT Source FROM countrypoverty WHERE Country = ? AND Year = ?";
+	private static final String UPDATE = "UPDATE countrypoverty SET Value = ? WHERE Country = ? AND Year = ?";
 //	private static final String READ_COUNTRIES = "SELECT DISTINCT Country FROM countrypoverty";
 	private static final String READ_LAST_YEAR_AVAILABLE_BY_COUNTRY = "SELECT Country, MAX(Year) FROM countrypoverty WHERE Calculated = false GROUP BY Country";
 	private static final String READ_VALUE_BY_KEY = "SELECT Value FROM countrypoverty WHERE Country = ? AND Year = ?";
@@ -288,5 +447,7 @@ public class CountryPovertyDataDAO {
 	private static final String READ_VALUE_BY_COUNTRY_AND_YEAR = "SELECT Value FROM countrypoverty WHERE Country = ? AND Year = ?";
 	private static final String READ_YEARS = "SELECT DISTINCT Year FROM countrypoverty WHERE Year >= ?";
 	private static final String READ_FIRST_YEAR = "SELECT min(Year) FROM countrypoverty";
+	private static final String READ_MANUAL_INSERTIONS = "SELECT Country, Year, Value FROM countrypoverty WHERE Source = 'none'";
 	private static final String DELETE = "DELETE FROM countrypoverty WHERE Source = ?";
+	private static final String DELETE_INSERTED_DATA = "DELETE FROM countrypoverty WHERE Country = ? AND Year = ? AND Source = 'none'";
 }
