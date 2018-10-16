@@ -22,7 +22,6 @@ import manager.data.model.CountryGDPPerCapitaData;
 import manager.data.model.CountryNetMigrationData;
 import manager.data.model.CountryPopulationData;
 import manager.data.model.CountryPovertyData;
-import manager.data.model.Data;
 import manager.data.model.GDPPerCapitaData;
 import manager.data.model.NetMigrationData;
 import manager.data.model.PopulationData;

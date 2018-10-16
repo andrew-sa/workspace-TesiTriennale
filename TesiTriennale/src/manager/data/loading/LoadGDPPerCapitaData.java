@@ -14,7 +14,6 @@ import manager.data.extraction.WorldBankDataWrapper;
 import manager.data.model.Country;
 import manager.data.model.CountryGDPPerCapitaData;
 import manager.data.model.GDPPerCapitaData;
-import manager.data.model.PopulationData;
 
 public class LoadGDPPerCapitaData {
 
