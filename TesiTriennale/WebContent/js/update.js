@@ -92,12 +92,12 @@ function showModalUpdate()
 	$('#insertion-form').hide();
 	$('#deleting-form').hide();
 	$('#password-form').show();
-	window.onclick = function(event) {
-		if (event.target == document.getElementById('modal-update'))
-	    {
-			document.getElementById('modal-update').style.display = "none";
-	    }
-	}
+//	window.onclick = function(event) {
+//		if (event.target == document.getElementById('modal-update'))
+//	    {
+//			document.getElementById('modal-update').style.display = "none";
+//	    }
+//	}
 	document.getElementById('modal-update').style.display = "block";
 }
 

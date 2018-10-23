@@ -77,7 +77,7 @@ public class DriverManagerConnectionPool {
 
 	private static DriverManagerConnectionPool instance = null;
 	private static List<Connection> freeDbConnections;
-	private static final String url = "jdbc:mysql://localhost:3306/tesitriennale";
+	private static final String url = "jdbc:mysql://localhost:3306/worldpovertyevo";
 	private static final String user = "root";
 	private static final String password = "";
 
