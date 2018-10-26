@@ -18,6 +18,7 @@ import manager.data.model.CountryPovertyData;
 import manager.data.model.PovertyData;
 import manager.data.transformation.EUDataTrasformer;
 import manager.data.transformation.USADataTrasformer;
+import manager.data.transformation.WorldBankDataTrasformer;
 
 public class LoadPovertyData {
 
@@ -60,6 +61,7 @@ public class LoadPovertyData {
 		ArrayList<CountryPovertyData> data = wrapper.extractPovertyData();
 		EUDataTrasformer trasformer = new EUDataTrasformer();
 		data = trasformer.correctCountriesCodesPovertyData(data);
+		data = trasformer.calculateInterpolatedValus(data);
 		deleteDataOnDB(EUDataWrapper.SOURCE);
 		saveDataOnDB(data);
 		updateSourceDate(EUDataWrapper.SOURCE);
@@ -89,8 +91,8 @@ public class LoadPovertyData {
 		ArrayList<Country> countries = countryDAO.readCountryForWorldBankOfADataType(PovertyData.DATA_TYPE);
 		WorldBankDataWrapper wrapper = new WorldBankDataWrapper();
 		ArrayList<CountryPovertyData> data = wrapper.extractPovertyData(countries);
-//		WorldBankDataTrasformer trasformer = new WorldBankDataTrasformer();
-//		data = trasformer.removeDuplicates(data);
+		WorldBankDataTrasformer trasformer = new WorldBankDataTrasformer();
+		data = trasformer.calculateInterpolatedValus(data);
 		deleteDataOnDB(WorldBankDataWrapper.SOURCE);
 		saveDataOnDB(data);
 		updateSourceDate(WorldBankDataWrapper.SOURCE);
