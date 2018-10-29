@@ -26,7 +26,7 @@ public class SourceDAO {
 		ResultSet rs = stm.executeQuery(READ);
 		while (rs.next())
 		{
-			sources.add(new Source(rs.getString(1), rs.getString(2), rs.getDate(3)));
+			sources.add(new Source(rs.getString(1), rs.getString(2), rs.getDate(3), rs.getInt(4)));
 		}
 		con.commit();
 		rs.close();

@@ -13,6 +13,13 @@ public class Source {
 		this.dataType = dataType;
 		this.date = date;
 	}
+	
+	public Source(String name, String dataType, Date date, int order) {
+		this.name = name;
+		this.dataType = dataType;
+		this.date = date;
+		this.order = order;
+	}
 
 	public boolean equals(Object otherObject)
 	{
@@ -24,9 +31,8 @@ public class Source {
 		return name.equals(other.name) && dataType.equals(other.dataType);
 	}
 	
-	public String toString()
-	{
-		return getClass().getName() + "[name=" + name + ", dataType=" + dataType + ", date=" + date + "]";
+	public String toString() {
+		return getClass().getName() + "[name=" + name + ", dataType=" + dataType + ", date=" + date + ", order=" + order + "]";
 	}
 
 	/**
@@ -71,8 +77,23 @@ public class Source {
 		this.date = date;
 	}
 
+	/**
+	 * @return the order
+	 */
+	public int getOrder() {
+		return order;
+	}
+
+	/**
+	 * @param order the order to set
+	 */
+	public void setOrder(int order) {
+		this.order = order;
+	}
+
 	private String name;
 	private String dataType;
 	private Date date;
+	private int order;
 
 }

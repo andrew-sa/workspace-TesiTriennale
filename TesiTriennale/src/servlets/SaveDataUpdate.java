@@ -21,6 +21,7 @@ import manager.data.loading.LoadGDPPerCapitaData;
 import manager.data.loading.LoadNetMigrationsData;
 import manager.data.loading.LoadPopulationData;
 import manager.data.loading.LoadPovertyData;
+import manager.data.model.CompareToOrder;
 import manager.data.model.GDPPerCapitaData;
 import manager.data.model.NetMigrationData;
 import manager.data.model.PopulationData;
@@ -58,8 +59,14 @@ public class SaveDataUpdate extends HttpServlet {
 			LoadNetMigrationsData loadNetMigrationData = new LoadNetMigrationsData();
 			LoadGDPPerCapitaData loadGDPPerCapitaData = new LoadGDPPerCapitaData();
 //			boolean updateExecuted = false;
+			
+//			sources.add(3, sources.get(8));
+//			System.out.println(sources);
+			sources.sort(new CompareToOrder());
+//			System.out.println(sources);
 			for (Source s: sources)
 			{
+//				System.out.println(s);
 				String updated = request.getParameter(s.getName() + s.getDataType());
 				if (replaceIfMissing(updated, REPLACEMENT).equals(updated))
 				{
